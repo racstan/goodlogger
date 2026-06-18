@@ -76,14 +76,17 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
       </div>
 
       {(field.type === 'select' || field.type === 'multiselect') && (
-        <textarea
-          aria-label="Options"
-          className="border border-slate-300 rounded px-2 py-1 text-sm w-full"
-          placeholder="One option per line (or comma-separated)"
-          rows={3}
-          value={field.options.join('\n')}
-          onChange={(e) => update({ options: parseOptions(e.target.value) } as Partial<FieldDef>)}
-        />
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">Options (one per line)</label>
+          <textarea
+            aria-label="Options"
+            className="border border-slate-300 rounded px-2 py-1.5 text-sm w-full min-h-[80px]"
+            placeholder={"Option 1\nOption 2\nOption 3"}
+            rows={3}
+            value={field.options.join('\n')}
+            onChange={(e) => update({ options: parseOptions(e.target.value) } as Partial<FieldDef>)}
+          />
+        </div>
       )}
 
       {field.type === 'slider' && (
