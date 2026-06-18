@@ -1,11 +1,9 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { seedIfEmpty } from '@/lib/seed';
 import { DeleteButton } from '@/components/DeleteButton';
 import { ProjectForm } from '@/components/ProjectForm';
 
 export default async function HomePage() {
-  await seedIfEmpty();
   const projects = await prisma.project.findMany({
     include: {
       templates: {
