@@ -1,5 +1,6 @@
 'use client';
-import { useTransition } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { deleteTemplate } from '@/app/actions/templates';
 import { deleteLog } from '@/app/actions/logs';
 import { deleteProject } from '@/app/actions/projects';
@@ -10,7 +11,8 @@ type Target =
   | { kind: 'project'; id: string; name: string; templateCount: number };
 
 export function DeleteButton({ target, className = '' }: { target: Target; className?: string }) {
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
 
   const message =
     target.kind === 'template'
@@ -19,13 +21,21 @@ export function DeleteButton({ target, className = '' }: { target: Target; class
       ? `Delete project "${target.name}" and remove its ${target.templateCount} template associations? (Templates themselves are not deleted.)`
       : 'Delete this entry?';
 
-  const onClick = () => {
+  const onClick = async () => {
     if (!confirm(message)) return;
-    start(async () => {
+    setPending(true);
+    try {
       if (target.kind === 'template') await deleteTemplate(target.id);
       else if (target.kind === 'project') await deleteProject(target.id);
       else await deleteLog(target.id, target.returnPath);
-    });
+      router.refresh();
+    } catch (err) {
+      // Next.js redirect throws inside server actions; ignore it
+      if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) throw err;
+      console.error('Delete failed:', err);
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
