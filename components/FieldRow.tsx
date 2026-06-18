@@ -76,16 +76,42 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
       </div>
 
       {(field.type === 'select' || field.type === 'multiselect') && (
-        <div>
-          <label className="block text-xs text-slate-500 mb-1">Options (one per line)</label>
-          <textarea
-            aria-label="Options"
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm w-full min-h-[80px]"
-            placeholder={"Option 1\nOption 2\nOption 3"}
-            rows={3}
-            value={field.options.join('\n')}
-            onChange={(e) => update({ options: parseOptions(e.target.value) } as Partial<FieldDef>)}
-          />
+        <div className="space-y-2">
+          <label className="block text-xs text-slate-500 font-medium">Options</label>
+          {field.options.map((opt, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 w-5 text-right shrink-0">{i + 1}.</span>
+              <input
+                aria-label={`Option ${i + 1}`}
+                className="border border-slate-300 rounded px-2 py-2 text-sm flex-1 min-w-0 min-h-11"
+                value={opt}
+                placeholder={`Option ${i + 1}`}
+                onChange={(e) => {
+                  const updated = [...field.options];
+                  updated[i] = e.target.value;
+                  update({ options: updated } as Partial<FieldDef>);
+                }}
+              />
+              <button
+                type="button"
+                aria-label={`Remove option ${i + 1}`}
+                onClick={() => {
+                  const updated = field.options.filter((_, idx) => idx !== i);
+                  update({ options: updated.length > 0 ? updated : [''] } as Partial<FieldDef>);
+                }}
+                className="text-red-400 hover:text-red-600 text-lg font-bold px-2 min-h-11 min-w-11 flex items-center justify-center shrink-0"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update({ options: [...field.options, ''] } as Partial<FieldDef>)}
+            className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1 min-h-11"
+          >
+            <span className="text-lg leading-none">+</span> Add option
+          </button>
         </div>
       )}
 
@@ -106,10 +132,6 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
   );
 }
 
-function parseOptions(raw: string): string[] {
-  return raw.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
-}
-
 export function makeField(type: FieldType, name = '', required = false): FieldDef {
   const id = 'f_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   switch (type) {
@@ -127,7 +149,7 @@ export function makeField(type: FieldType, name = '', required = false): FieldDe
       return { id, name, type: 'boolean', required };
     case 'select':
     case 'multiselect':
-      return { id, name, type, required, options: ['Option 1'] };
+      return { id, name, type, required, options: [] };
     case 'slider':
       return { id, name, type: 'slider', required, min: 0, max: 10, step: 1 };
     case 'rating':
