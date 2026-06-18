@@ -41,5 +41,5 @@ export async function updateTemplate(id: string, formData: FormData) {
 export async function deleteTemplate(id: string) {
   await prisma.template.delete({ where: { id } });
   revalidatePath('/');
-  redirect('/');
+  revalidatePath('/templates');
 }

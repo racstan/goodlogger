@@ -30,7 +30,6 @@ export async function updateProject(id: string, formData: FormData) {
 export async function deleteProject(id: string) {
   await prisma.project.delete({ where: { id } });
   revalidatePath('/');
-  redirect('/');
 }
 
 export async function importTemplate(projectId: string, templateId: string) {
