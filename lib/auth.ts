@@ -2,7 +2,8 @@ import { prisma } from './prisma';
 import { cookies } from 'next/headers';
 
 const SESSION_COOKIE = 'session_token';
-const SESSION_TTL_DAYS = 30;
+const SESSION_TTL_SHORT_DAYS = 1;   // browser session-ish
+const SESSION_TTL_LONG_DAYS = 90;   // "keep me signed in"
 
 // ─── Password hashing (Web Crypto, no dependencies) ───
 
@@ -40,20 +41,21 @@ export async function createUser(email: string, name: string, password: string) 
   return createSession(user.id);
 }
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(email: string, password: string, remember: boolean) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return { error: 'Invalid email or password' };
 
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) return { error: 'Invalid email or password' };
 
-  return createSession(user.id);
+  return createSession(user.id, remember);
 }
 
-async function createSession(userId: string) {
+async function createSession(userId: string, remember = false) {
   const token = generateToken();
+  const ttlDays = remember ? SESSION_TTL_LONG_DAYS : SESSION_TTL_SHORT_DAYS;
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + SESSION_TTL_DAYS);
+  expiresAt.setDate(expiresAt.getDate() + ttlDays);
 
   await prisma.session.create({
     data: { userId, token, expiresAt },
@@ -65,7 +67,7 @@ async function createSession(userId: string) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: SESSION_TTL_DAYS * 24 * 60 * 60,
+    maxAge: ttlDays * 24 * 60 * 60,
   });
 
   return { success: true };

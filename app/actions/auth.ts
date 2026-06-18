@@ -27,12 +27,13 @@ export async function registerAction(_prev: unknown, formData: FormData) {
 export async function loginAction(_prev: unknown, formData: FormData) {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const keepSignedIn = formData.get('keepSignedIn') === 'on';
 
   if (!email || !password) {
     return { error: 'Email and password are required' };
   }
 
-  const result = await loginUser(email, password);
+  const result = await loginUser(email, password, keepSignedIn);
   if ('error' in result) return { error: result.error };
 
   redirect('/');

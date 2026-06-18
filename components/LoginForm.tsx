@@ -32,6 +32,14 @@ export function LoginForm() {
           placeholder="••••••"
         />
       </div>
+      <label className="flex items-center gap-2 text-sm text-slate-600">
+        <input
+          type="checkbox"
+          name="keepSignedIn"
+          className="min-h-4 min-w-4"
+        />
+        Keep me signed in
+      </label>
       {state?.error && <p className="text-red-600 text-sm">{state.error}</p>}
       <button
         type="submit"
