@@ -1,0 +1,100 @@
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { FieldRow, makeField } from './FieldRow';
+import { validateFieldDef, type FieldDef } from '@/lib/schema';
+import { createTemplate, updateTemplate } from '@/app/actions/templates';
+
+type Props = {
+  templateId?: string;
+  initialName?: string;
+  initialFields?: FieldDef[];
+  hasLogs?: boolean;
+};
+
+export function TemplateDesigner({ templateId, initialName = '', initialFields = [], hasLogs = false }: Props) {
+  const router = useRouter();
+  const [name, setName] = useState(initialName);
+  const [fields, setFields] = useState<FieldDef[]>(
+    initialFields.length > 0 ? initialFields : [makeField('text', 'Field 1')]
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const addField = () => setFields((f) => [...f, makeField('text', `Field ${f.length + 1}`)]);
+
+  const updateField = (i: number, def: FieldDef) =>
+    setFields((arr) => arr.map((f, idx) => (idx === i ? def : f)));
+
+  const removeField = (i: number) => setFields((arr) => arr.filter((_, idx) => idx !== i));
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    if (!name.trim()) { setError('Template name is required'); return; }
+    const seen = new Set<string>();
+    for (const f of fields) {
+      const key = f.name.trim().toLowerCase();
+      if (!key) { setError('All fields need a name'); return; }
+      if (seen.has(key)) { setError(`Duplicate field name: "${f.name}"`); return; }
+      seen.add(key);
+      const v = validateFieldDef(f);
+      if (!v.ok) { setError(v.error); return; }
+    }
+
+    const fd = new FormData();
+    fd.set('name', name.trim());
+    fd.set('fields', JSON.stringify(fields));
+    setPending(true);
+    try {
+      if (templateId) await updateTemplate(templateId, fd);
+      else await createTemplate(fd);
+    } catch (err) {
+      // Next.js redirect throws a special error; let it propagate
+      if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) throw err;
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setPending(false);
+      router.refresh();
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      {hasLogs && (
+        <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Heads up: this template has existing entries. Changing or removing fields will cause older entries to show '—' for affected columns.
+        </div>
+      )}
+      <div>
+        <label className="block text-sm font-medium mb-1">Template name</label>
+        <input
+          className="border border-slate-300 rounded px-3 py-2 w-full"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Daily Standup"
+        />
+      </div>
+      <div className="space-y-2">
+        {fields.map((f, i) => (
+          <FieldRow
+            key={f.id}
+            index={i}
+            field={f}
+            onChange={(d) => updateField(i, d)}
+            onRemove={() => removeField(i)}
+          />
+        ))}
+      </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <button type="button" onClick={addField} className="rounded border border-slate-300 px-4 py-2 text-sm min-h-11 hover:bg-slate-50">
+          + Add Field
+        </button>
+        <button type="submit" disabled={pending} className="rounded bg-slate-900 text-white px-4 py-2 text-sm min-h-11 hover:bg-slate-700 disabled:opacity-50">
+          {pending ? 'Saving…' : (templateId ? 'Save Changes' : 'Create Template')}
+        </button>
+      </div>
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+    </form>
+  );
+}

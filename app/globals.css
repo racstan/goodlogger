@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { background: #f8fafc; color: #0f172a; }
+
+/* Safe area padding for notched mobile devices */
+@supports(padding:max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Prevent iOS zoom on input focus */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
