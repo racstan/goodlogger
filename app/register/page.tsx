@@ -12,12 +12,12 @@ export default async function RegisterPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold">Create account</h1>
-          <p className="text-sm text-slate-500 mt-1">Start logging your data</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Start logging your data</p>
         </div>
         <RegisterForm />
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
           Already have an account?{' '}
-          <Link href="/login" className="text-slate-900 font-medium hover:underline">
+          <Link href="/login" className="text-slate-900 dark:text-slate-100 font-medium hover:underline">
             Sign in
           </Link>
         </p>

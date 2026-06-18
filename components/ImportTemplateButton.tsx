@@ -31,7 +31,7 @@ export function ImportTemplateButton({ projectId, templateId, action, label }: P
       className={`rounded px-3 py-1.5 text-sm disabled:opacity-50 ${
         action === 'import'
           ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-          : 'border border-slate-300 text-slate-600 hover:bg-slate-50'
+          : 'border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
       }`}
     >
       {pending ? '…' : (label ?? (action === 'import' ? 'Import' : 'Remove'))}

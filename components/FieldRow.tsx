@@ -29,13 +29,13 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
   const update = (patch: Partial<FieldDef>) => onChange({ ...field, ...patch } as FieldDef);
 
   return (
-    <div className="rounded border border-slate-200 bg-white p-3 space-y-2">
+    <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 space-y-2">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-slate-400 text-sm w-6 shrink-0">#{index + 1}</span>
+          <span className="text-slate-400 dark:text-slate-500 text-sm w-6 shrink-0">#{index + 1}</span>
           <input
             aria-label="Field name"
-            className="border border-slate-300 rounded px-2 py-2 text-sm flex-1 min-w-0 min-h-11 sm:min-h-0"
+            className="border border-slate-300 dark:border-slate-600 rounded px-2 py-2 text-sm flex-1 min-w-0 min-h-11 sm:min-h-0 dark:bg-slate-800 dark:text-slate-100"
             placeholder="Field name"
             value={field.name}
             onChange={(e) => update({ name: e.target.value })}
@@ -44,7 +44,7 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
         <div className="flex items-center gap-2">
           <select
             aria-label="Field type"
-            className="border border-slate-300 rounded px-2 py-2 text-sm flex-1 min-h-11 sm:min-h-0"
+            className="border border-slate-300 dark:border-slate-600 rounded px-2 py-2 text-sm flex-1 min-h-11 sm:min-h-0 dark:bg-slate-800 dark:text-slate-100"
             value={field.type}
             onChange={(e) => {
               const t = e.target.value as FieldType;
@@ -55,7 +55,7 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
               <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
-          <label className="flex items-center gap-1 text-sm text-slate-600 whitespace-nowrap shrink-0">
+          <label className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">
             <input
               type="checkbox"
               checked={field.required}
@@ -77,13 +77,13 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
 
       {(field.type === 'select' || field.type === 'multiselect') && (
         <div className="space-y-2">
-          <label className="block text-xs text-slate-500 font-medium">Options</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 font-medium">Options</label>
           {field.options.map((opt, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 w-5 text-right shrink-0">{i + 1}.</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 w-5 text-right shrink-0">{i + 1}.</span>
               <input
                 aria-label={`Option ${i + 1}`}
-                className="border border-slate-300 rounded px-2 py-2 text-sm flex-1 min-w-0 min-h-11"
+                className="border border-slate-300 dark:border-slate-600 rounded px-2 py-2 text-sm flex-1 min-w-0 min-h-11 dark:bg-slate-800 dark:text-slate-100"
                 value={opt}
                 placeholder={`Option ${i + 1}`}
                 onChange={(e) => {
@@ -108,7 +108,7 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
           <button
             type="button"
             onClick={() => update({ options: [...field.options, ''] } as Partial<FieldDef>)}
-            className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1 min-h-11"
+            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 min-h-11"
           >
             <span className="text-lg leading-none">+</span> Add option
           </button>
@@ -117,15 +117,15 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
 
       {field.type === 'slider' && (
         <div className="flex gap-2 pl-8 text-sm flex-wrap">
-          <label>min <input type="number" className="border border-slate-300 rounded px-2 py-1 w-20" value={field.min} onChange={(e) => update({ min: Number(e.target.value) } as Partial<FieldDef>)} /></label>
-          <label>max <input type="number" className="border border-slate-300 rounded px-2 py-1 w-20" value={field.max} onChange={(e) => update({ max: Number(e.target.value) } as Partial<FieldDef>)} /></label>
-          <label>step <input type="number" step="any" className="border border-slate-300 rounded px-2 py-1 w-20" value={field.step} onChange={(e) => update({ step: Number(e.target.value) } as Partial<FieldDef>)} /></label>
+          <label>min <input type="number" className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 dark:bg-slate-800 dark:text-slate-100" value={field.min} onChange={(e) => update({ min: Number(e.target.value) } as Partial<FieldDef>)} /></label>
+          <label>max <input type="number" className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 dark:bg-slate-800 dark:text-slate-100" value={field.max} onChange={(e) => update({ max: Number(e.target.value) } as Partial<FieldDef>)} /></label>
+          <label>step <input type="number" step="any" className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 dark:bg-slate-800 dark:text-slate-100" value={field.step} onChange={(e) => update({ step: Number(e.target.value) } as Partial<FieldDef>)} /></label>
         </div>
       )}
 
       {field.type === 'rating' && (
         <div className="flex gap-2 pl-8 text-sm">
-          <label>max stars <input type="number" className="border border-slate-300 rounded px-2 py-1 w-20" value={field.max ?? 5} onChange={(e) => update({ max: Number(e.target.value) } as Partial<FieldDef>)} /></label>
+          <label>max stars <input type="number" className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 dark:bg-slate-800 dark:text-slate-100" value={field.max ?? 5} onChange={(e) => update({ max: Number(e.target.value) } as Partial<FieldDef>)} /></label>
         </div>
       )}
     </div>

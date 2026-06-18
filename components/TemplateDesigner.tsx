@@ -62,14 +62,14 @@ export function TemplateDesigner({ templateId, initialName = '', initialFields =
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {hasLogs && (
-        <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <div className="rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
           Heads up: this template has existing entries. Changing or removing fields will cause older entries to show '—' for affected columns.
         </div>
       )}
       <div>
         <label className="block text-sm font-medium mb-1">Template name</label>
         <input
-          className="border border-slate-300 rounded px-3 py-2 w-full"
+          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 w-full dark:bg-slate-800 dark:text-slate-100"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Daily Standup"
@@ -87,10 +87,10 @@ export function TemplateDesigner({ templateId, initialName = '', initialFields =
         ))}
       </div>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <button type="button" onClick={addField} className="rounded border border-slate-300 px-4 py-2 text-sm min-h-11 hover:bg-slate-50">
+        <button type="button" onClick={addField} className="rounded border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm min-h-11 hover:bg-slate-50 dark:hover:bg-slate-700">
           + Add Field
         </button>
-        <button type="submit" disabled={pending} className="rounded bg-slate-900 text-white px-4 py-2 text-sm min-h-11 hover:bg-slate-700 disabled:opacity-50">
+        <button type="submit" disabled={pending} className="rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-2 text-sm min-h-11 hover:bg-slate-700 dark:hover:bg-slate-200 disabled:opacity-50">
           {pending ? 'Saving…' : (templateId ? 'Save Changes' : 'Create Template')}
         </button>
       </div>

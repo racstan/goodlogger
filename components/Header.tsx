@@ -1,11 +1,13 @@
 'use client';
 import { useState } from 'react';
 import { logoutAction } from '@/app/actions/auth';
+import { useTheme } from './ThemeProvider';
 
 type User = { id: string; email: string; name: string } | null;
 
 export function Header({ user }: { user: User }) {
   const [open, setOpen] = useState(false);
+  const { theme, toggle } = useTheme();
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -20,9 +22,31 @@ export function Header({ user }: { user: User }) {
 
         {/* Desktop actions */}
         <div className="hidden md:flex ml-auto items-center gap-3">
+          <button
+            type="button"
+            onClick={toggle}
+            className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400"
+            aria-label="Toggle dark mode"
+          >
+            {theme === 'dark' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            )}
+          </button>
+          <a
+            href="/settings"
+            className="rounded border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Settings
+          </a>
           <a
             href="/templates/new"
-            className="rounded bg-slate-900 text-white px-3 py-1.5 text-sm hover:bg-slate-700"
+            className="rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-1.5 text-sm hover:bg-slate-700 dark:hover:bg-slate-300"
           >
             + New Template
           </a>
@@ -70,28 +94,42 @@ export function Header({ user }: { user: User }) {
 
       {/* Mobile dropdown menu */}
       {open && (
-        <div className="md:hidden border-t border-slate-200 px-4 py-3 space-y-1 bg-white">
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-700 px-4 py-3 space-y-1 bg-white dark:bg-slate-900">
           <a
             href="/"
             onClick={() => setOpen(false)}
-            className="block rounded px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+            className="block rounded px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Projects
           </a>
           <a
             href="/templates"
             onClick={() => setOpen(false)}
-            className="block rounded px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+            className="block rounded px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             Templates
           </a>
           <a
             href="/templates/new"
             onClick={() => setOpen(false)}
-            className="block w-full text-center rounded bg-slate-900 text-white px-3 py-2.5 text-sm mt-2"
+            className="block w-full text-center rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-2.5 text-sm mt-2"
           >
             + New Template
           </a>
+          <a
+            href="/settings"
+            onClick={() => setOpen(false)}
+            className="block rounded px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Settings
+          </a>
+          <button
+            type="button"
+            onClick={() => { toggle(); setOpen(false); }}
+            className="w-full text-left rounded px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+          >
+            {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
+          </button>
           {user ? (
             <>
               <div className="px-3 py-2 text-xs text-slate-400">{user.email}</div>

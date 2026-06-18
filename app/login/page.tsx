@@ -12,12 +12,12 @@ export default async function LoginPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold">Welcome back</h1>
-          <p className="text-sm text-slate-500 mt-1">Sign in to your account</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Sign in to your account</p>
         </div>
         <LoginForm />
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-slate-900 font-medium hover:underline">
+          <Link href="/register" className="text-slate-900 dark:text-slate-100 font-medium hover:underline">
             Sign up
           </Link>
         </p>

@@ -79,21 +79,21 @@ export function ProjectLogForm({ projectId, templates, nextSerial }: Props) {
   };
 
   return (
-    <div className="rounded border border-slate-200 bg-white">
-      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-        <h2 className="font-medium">Log Entry</h2>
-        <span className="text-xs text-slate-500">Entry #{nextSerial}</span>
+    <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+        <h2 className="font-medium dark:text-slate-100">Log Entry</h2>
+        <span className="text-xs text-slate-500 dark:text-slate-400">Entry #{nextSerial}</span>
       </div>
 
       <form onSubmit={submit} className="p-4 space-y-6">
         {templates.map((tmpl) => (
           <div key={tmpl.id}>
-            <h3 className="text-sm font-semibold text-slate-600 mb-3 border-b border-slate-100 pb-1">
+            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3 border-b border-slate-100 dark:border-slate-700 pb-1">
               {tmpl.name}
             </h3>
             <div className="space-y-4">
               {tmpl.fields.map((f) => (
-                <div key={f.id} className="rounded border border-slate-200 p-3">
+                <div key={f.id} className="rounded border border-slate-200 dark:border-slate-700 p-3">
                   <label className="block text-sm font-medium mb-1">
                     {f.name}{f.required && <span className="text-red-600"> *</span>}
                   </label>
@@ -122,7 +122,7 @@ export function ProjectLogForm({ projectId, templates, nextSerial }: Props) {
 }
 
 function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void): React.ReactElement {
-  const inputClass = 'border border-slate-300 rounded px-3 py-2.5 w-full min-h-11 text-sm';
+  const inputClass = 'border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 w-full min-h-11 text-sm dark:bg-slate-800 dark:text-slate-100';
   switch (f.type) {
     case 'text':
       return <input type="text" className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />;
@@ -146,7 +146,7 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
       return (
         <div className="flex items-center gap-3">
           <input type="color" className="h-10 w-14 cursor-pointer shrink-0" value={String(value ?? '#000000')} onChange={(e) => onChange(e.target.value)} />
-          <input type="text" className="border border-slate-300 rounded px-3 py-2.5 min-h-11 text-sm w-full" value={String(value ?? '#000000')} onChange={(e) => onChange(e.target.value)} placeholder="#000000" />
+          <input type="text" className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 min-h-11 text-sm w-full dark:bg-slate-800 dark:text-slate-100" value={String(value ?? '#000000')} onChange={(e) => onChange(e.target.value)} placeholder="#000000" />
         </div>
       );
     case 'select':
@@ -199,7 +199,7 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
               {i < current ? '★' : '☆'}
             </button>
           ))}
-          <span className="ml-2 text-sm text-slate-500">{current}/{max}</span>
+          <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">{current}/{max}</span>
         </div>
       );
     }

@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 html, body { background: #f8fafc; color: #0f172a; }
+.dark html, .dark body { background: #0f172a; color: #f1f5f9; }
 
 /* Safe area padding for notched mobile devices */
 @supports(padding:max(0px)) {

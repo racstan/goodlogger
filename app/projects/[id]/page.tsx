@@ -78,16 +78,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href="/" className="text-sm text-slate-500 hover:text-slate-700 inline-block mb-1">&larr; Projects</Link>
+          <Link href="/" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 inline-block mb-1">&larr; Projects</Link>
           <h1 className="text-xl sm:text-2xl font-semibold break-words">{project.name}</h1>
-          {project.description && <p className="text-slate-500 mt-1 text-sm sm:text-base">{project.description}</p>}
+          {project.description && <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">{project.description}</p>}
         </div>
         {importedTemplates.length > 0 && (
           <div className="flex items-center gap-2 shrink-0">
             <a
               href={`/api/projects/${project.id}/export`}
               download
-              className="rounded border border-slate-300 bg-white px-4 py-2 text-sm min-h-11 text-slate-700 hover:bg-slate-50 whitespace-nowrap"
+              className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm min-h-11 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 whitespace-nowrap"
             >
               Export CSV
             </a>
@@ -107,16 +107,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       {/* Unified scrollable log table */}
       {importedTemplates.length > 0 && (
-        <div className="rounded border border-slate-200 bg-white">
-          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-            <h2 className="font-medium text-sm">
+        <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+            <h2 className="font-medium text-sm dark:text-slate-100">
               Entries
               {parsedLogs.length > 0 && (
-                <span className="text-slate-400 font-normal ml-1">({parsedLogs.length})</span>
+                <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({parsedLogs.length})</span>
               )}
             </h2>
             {parsedLogs.length > 0 && (
-              <div className="md:hidden text-xs text-slate-400">
+              <div className="md:hidden text-xs text-slate-400 dark:text-slate-500">
                 {parsedLogs.length} log{parsedLogs.length === 1 ? '' : 's'}
               </div>
             )}
@@ -126,16 +126,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {/* ─── Mobile card view (< md) ─── */}
               <div className="md:hidden p-3 space-y-3 max-h-[400px] overflow-y-auto">
                 {[...parsedLogs].reverse().map((log) => (
-                  <div key={log.id} className="rounded border border-slate-200 bg-white p-3 space-y-2">
+                  <div key={log.id} className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-slate-500 font-mono">#{log.serial} · {new Date(log.loggedAt).toLocaleString()}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">#{log.serial} · {new Date(log.loggedAt).toLocaleString()}</span>
                       <DeleteButton target={{ kind: 'log', id: log.id, returnPath: `/projects/${id}` }} />
                     </div>
                     {allFields.map((f) => {
                       const v = log.values[f.id];
                       return (
                         <div key={f.id} className="flex items-baseline gap-2 text-sm">
-                          <span className="text-slate-500 shrink-0 w-28 truncate">{f.name}:</span>
+                          <span className="text-slate-500 dark:text-slate-400 shrink-0 w-28 truncate">{f.name}:</span>
                           <span className="font-medium break-words min-w-0">{formatCell(v)}</span>
                         </div>
                       );
@@ -146,8 +146,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {/* ─── Desktop table view (md+) ─── */}
               <div className="hidden md:block overflow-auto" style={{ height: '400px' }}>
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-white">
-                    <tr className="border-b border-slate-200 text-left text-slate-500">
+                  <thead className="sticky top-0 bg-white dark:bg-slate-800">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-500 dark:text-slate-400">
                       <th className="px-4 py-2 font-medium whitespace-nowrap">#</th>
                       {allFields.map((f) => (
                         <th key={f.id} className="px-4 py-2 font-medium whitespace-nowrap">{f.name}</th>
@@ -158,8 +158,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   </thead>
                   <tbody>
                     {parsedLogs.map((log) => (
-                      <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-4 py-2 text-slate-400 whitespace-nowrap">{log.serial}</td>
+                      <tr key={log.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <td className="px-4 py-2 text-slate-400 dark:text-slate-500 whitespace-nowrap">{log.serial}</td>
                         {allFields.map((f) => {
                           const v = log.values[f.id];
                           return (
@@ -168,7 +168,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                             </td>
                           );
                         })}
-                        <td className="px-4 py-2 text-slate-500 whitespace-nowrap text-xs">
+                        <td className="px-4 py-2 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">
                           {new Date(log.loggedAt).toLocaleString()}
                         </td>
                         <td className="px-4 py-2">
@@ -181,7 +181,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               </div>
             </>
           ) : (
-            <div className="px-4 py-8 text-center text-sm text-slate-400">
+            <div className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
               No entries yet. Use the form below to log your first entry.
             </div>
           )}

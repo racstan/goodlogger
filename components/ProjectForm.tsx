@@ -30,22 +30,22 @@ export function ProjectForm() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="rounded border border-slate-200 bg-white p-4 space-y-3">
+    <form onSubmit={onSubmit} className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-3">
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="flex flex-col sm:flex-row gap-2">
         <input
-          className="border border-slate-300 rounded px-3 py-2 text-sm min-h-11 flex-1 min-w-0"
+          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-sm min-h-11 flex-1 min-w-0 dark:bg-slate-800 dark:text-slate-100"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="New project name"
         />
         <input
-          className="border border-slate-300 rounded px-3 py-2 text-sm min-h-11 flex-1 min-w-0"
+          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-sm min-h-11 flex-1 min-w-0 dark:bg-slate-800 dark:text-slate-100"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description (optional)"
         />
-        <button type="submit" disabled={pending} className="rounded bg-slate-900 text-white px-4 py-2 text-sm min-h-11 hover:bg-slate-700 disabled:opacity-50">
+        <button type="submit" disabled={pending} className="rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-2 text-sm min-h-11 hover:bg-slate-700 dark:hover:bg-slate-200 disabled:opacity-50">
           {pending ? 'Creating…' : 'Create Project'}
         </button>
       </div>
