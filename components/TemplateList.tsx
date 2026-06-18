@@ -25,18 +25,8 @@ export async function TemplateList() {
                 {fieldCount} field{fieldCount === 1 ? '' : 's'} · {logCount} entr{logCount === 1 ? 'y' : 'ies'}
               </div>
             </div>
-            {/* Desktop: all actions visible */}
-            <div className="hidden sm:flex gap-2 shrink-0">
-              <Link href={`/templates/${t.id}/log`}  className="rounded bg-emerald-600 text-white px-3 py-1.5 text-sm hover:bg-emerald-700">Log</Link>
-              <Link href={`/templates/${t.id}/logs`} className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">View Logs</Link>
-              <Link href={`/templates/${t.id}/edit`} className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">Edit</Link>
-              <DeleteButton target={{ kind: 'template', id: t.id, name: t.name, logCount }} />
-            </div>
-            {/* Mobile: condensed actions */}
-            <div className="flex sm:hidden gap-2 shrink-0">
-              <Link href={`/templates/${t.id}/log`} className="rounded bg-emerald-600 text-white px-3 py-2 text-sm min-h-11 flex items-center">Log</Link>
-              <Link href={`/templates/${t.id}/logs`} className="rounded border border-slate-300 px-3 py-2 text-sm min-h-11 flex items-center">{logCount}</Link>
-              <Link href={`/templates/${t.id}/edit`} className="rounded border border-slate-300 px-3 py-2 text-sm min-h-11 flex items-center">Edit</Link>
+            <div className="flex gap-2 shrink-0">
+              <Link href={`/templates/${t.id}/edit`} className="rounded border border-slate-300 px-3 py-2 text-sm min-h-11 flex items-center hover:bg-slate-50">Edit</Link>
               <DeleteButton target={{ kind: 'template', id: t.id, name: t.name, logCount }} />
             </div>
           </li>

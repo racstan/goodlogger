@@ -20,7 +20,7 @@ export async function createTemplate(formData: FormData) {
     data: { name, fields: JSON.stringify(fields) },
   });
   revalidatePath('/');
-  redirect(`/templates/${t.id}/log`);
+  redirect(`/templates/${t.id}/edit`);
 }
 
 export async function updateTemplate(id: string, formData: FormData) {
