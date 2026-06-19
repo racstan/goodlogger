@@ -1,5 +1,5 @@
 'use client';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { importTemplate, removeTemplate } from '@/app/actions/projects';
 
 type Props = {
@@ -11,30 +11,39 @@ type Props = {
 
 export function ImportTemplateButton({ projectId, templateId, action, label }: Props) {
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const handleClick = () => {
     const msg = action === 'import'
       ? 'Import this template into the project?'
       : 'Remove this template from the project? (The template itself is not deleted.)';
     if (!confirm(msg)) return;
+    setError(null);
     start(async () => {
-      if (action === 'import') await importTemplate(projectId, templateId);
-      else await removeTemplate(projectId, templateId);
+      try {
+        if (action === 'import') await importTemplate(projectId, templateId);
+        else await removeTemplate(projectId, templateId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Something went wrong');
+      }
     });
   };
 
   return (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={handleClick}
-      className={`rounded px-3 py-1.5 text-sm disabled:opacity-50 ${
-        action === 'import'
-          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-          : 'border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
-      }`}
-    >
-      {pending ? '…' : (label ?? (action === 'import' ? 'Import' : 'Remove'))}
-    </button>
+    <div>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={handleClick}
+        className={`rounded px-3 py-1.5 text-sm disabled:opacity-50 ${
+          action === 'import'
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+            : 'border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+        }`}
+      >
+        {pending ? '…' : (label ?? (action === 'import' ? 'Import' : 'Remove'))}
+      </button>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   );
 }

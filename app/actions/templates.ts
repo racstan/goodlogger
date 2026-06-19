@@ -16,11 +16,18 @@ export async function createTemplate(formData: FormData) {
   if (!name) throw new Error('Name is required');
   const v = validateFieldDefs(fields);
   if (!v.ok) throw new Error(v.error);
-  const t = await prisma.template.create({
-    data: { name, fields: JSON.stringify(fields) },
-  });
-  revalidatePath('/');
-  redirect(`/templates/${t.id}/edit`);
+  try {
+    const t = await prisma.template.create({
+      data: { name, fields: JSON.stringify(fields) },
+    });
+    revalidatePath('/');
+    redirect(`/templates/${t.id}/edit`);
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
+      throw new Error(`A template named "${name}" already exists`);
+    }
+    throw err;
+  }
 }
 
 export async function updateTemplate(id: string, formData: FormData) {
@@ -29,13 +36,20 @@ export async function updateTemplate(id: string, formData: FormData) {
   if (!name) throw new Error('Name is required');
   const v = validateFieldDefs(fields);
   if (!v.ok) throw new Error(v.error);
-  await prisma.template.update({
-    where: { id },
-    data: { name, fields: JSON.stringify(fields) },
-  });
-  revalidatePath('/');
-  revalidatePath(`/templates/${id}/edit`);
-  redirect(`/templates/${id}/edit?saved=1`);
+  try {
+    await prisma.template.update({
+      where: { id },
+      data: { name, fields: JSON.stringify(fields) },
+    });
+    revalidatePath('/');
+    revalidatePath(`/templates/${id}/edit`);
+    redirect(`/templates/${id}/edit?saved=1`);
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
+      throw new Error(`A template named "${name}" already exists`);
+    }
+    throw err;
+  }
 }
 
 export async function deleteTemplate(id: string) {

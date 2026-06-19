@@ -33,9 +33,20 @@ export async function deleteProject(id: string) {
 }
 
 export async function importTemplate(projectId: string, templateId: string) {
-  await prisma.projectTemplate.create({
-    data: { projectId, templateId },
-  });
+  const template = await prisma.template.findUnique({ where: { id: templateId } });
+  if (!template) throw new Error('Template not found');
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project) throw new Error('Project not found');
+  try {
+    await prisma.projectTemplate.create({
+      data: { projectId, templateId },
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
+      throw new Error('This template is already imported into the project');
+    }
+    throw err;
+  }
   revalidatePath(`/projects/${projectId}`);
 }
 

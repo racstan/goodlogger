@@ -63,7 +63,7 @@ export function TemplateDesigner({ templateId, initialName = '', initialFields =
     <form onSubmit={onSubmit} className="space-y-4">
       {hasLogs && (
         <div className="rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-          Heads up: this template has existing entries. Changing or removing fields will cause older entries to show '—' for affected columns.
+          Heads up: this template has existing entries (direct or via projects that imported it). Changing or removing fields will cause older entries to show '—' for affected columns.
         </div>
       )}
       <div>

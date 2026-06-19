@@ -69,111 +69,113 @@ export async function importData(data: ExportData) {
     return { error: 'Invalid backup file format' };
   }
 
-  // Track old ID → new ID mappings
-  const templateMap = new Map<string, string>();
-  const projectMap = new Map<string, string>();
-  const logMap = new Map<string, string>();
+  try {
+    return await prisma.$transaction(async (tx) => {
+      // Track old ID → new ID mappings
+      const templateMap = new Map<string, string>();
+      const projectMap = new Map<string, string>();
+      const logMap = new Map<string, string>();
 
-  // 1. Import templates
-  for (const t of data.templates) {
-    // Check if template with same name exists
-    const existing = await prisma.template.findUnique({ where: { name: t.name } });
-    if (existing) {
-      templateMap.set(t.id, existing.id);
-      // Update fields in case they differ
-      await prisma.template.update({
-        where: { id: existing.id },
-        data: { fields: JSON.stringify(t.fields) },
-      });
-    } else {
-      const created = await prisma.template.create({
-        data: { name: t.name, fields: JSON.stringify(t.fields) },
-      });
-      templateMap.set(t.id, created.id);
-    }
-  }
+      // 1. Import templates
+      for (const t of data.templates) {
+        const existing = await tx.template.findUnique({ where: { name: t.name } });
+        if (existing) {
+          templateMap.set(t.id, existing.id);
+          await tx.template.update({
+            where: { id: existing.id },
+            data: { fields: JSON.stringify(t.fields) },
+          });
+        } else {
+          const created = await tx.template.create({
+            data: { name: t.name, fields: JSON.stringify(t.fields) },
+          });
+          templateMap.set(t.id, created.id);
+        }
+      }
 
-  // 2. Import projects
-  for (const p of data.projects) {
-    const existing = await prisma.project.findUnique({ where: { name: p.name } });
-    if (existing) {
-      projectMap.set(p.id, existing.id);
-      await prisma.project.update({
-        where: { id: existing.id },
-        data: { description: p.description },
-      });
-    } else {
-      const created = await prisma.project.create({
-        data: { name: p.name, description: p.description },
-      });
-      projectMap.set(p.id, created.id);
-    }
+      // 2. Import projects
+      for (const p of data.projects) {
+        const existing = await tx.project.findUnique({ where: { name: p.name } });
+        if (existing) {
+          projectMap.set(p.id, existing.id);
+          await tx.project.update({
+            where: { id: existing.id },
+            data: { description: p.description },
+          });
+        } else {
+          const created = await tx.project.create({
+            data: { name: p.name, description: p.description },
+          });
+          projectMap.set(p.id, created.id);
+        }
 
-    // 3. Import project-template associations
-    const newProjectId = projectMap.get(p.id)!;
-    for (const oldTemplateId of p.templateIds) {
-      const newTemplateId = templateMap.get(oldTemplateId);
-      if (!newTemplateId) continue;
+        // 3. Import project-template associations
+        const newProjectId = projectMap.get(p.id)!;
+        for (const oldTemplateId of p.templateIds) {
+          const newTemplateId = templateMap.get(oldTemplateId);
+          if (!newTemplateId) continue;
 
-      await prisma.projectTemplate.upsert({
-        where: {
-          projectId_templateId: {
+          await tx.projectTemplate.upsert({
+            where: {
+              projectId_templateId: {
+                projectId: newProjectId,
+                templateId: newTemplateId,
+              },
+            },
+            create: { projectId: newProjectId, templateId: newTemplateId },
+            update: {},
+          });
+        }
+      }
+
+      // 4. Import logs (skip duplicates by checking existing loggedAt + projectId combo)
+      let imported = 0;
+      let skipped = 0;
+      for (const l of data.logs) {
+        const newProjectId = l.projectId ? projectMap.get(l.projectId) ?? null : null;
+        const newTemplateId = l.templateId ? templateMap.get(l.templateId) ?? null : null;
+
+        if (l.projectId && !newProjectId) {
+          skipped++;
+          continue;
+        }
+
+        const existingLog = await tx.log.findFirst({
+          where: {
+            projectId: newProjectId,
+            loggedAt: new Date(l.loggedAt),
+          },
+        });
+
+        if (existingLog) {
+          logMap.set(l.id, existingLog.id);
+          skipped++;
+          continue;
+        }
+
+        await tx.log.create({
+          data: {
             projectId: newProjectId,
             templateId: newTemplateId,
+            values: JSON.stringify(l.values),
+            loggedAt: new Date(l.loggedAt),
           },
+        });
+        imported++;
+      }
+
+      return {
+        success: true,
+        summary: {
+          templates: data.templates.length,
+          projects: data.projects.length,
+          logsImported: imported,
+          logsSkipped: skipped,
         },
-        create: { projectId: newProjectId, templateId: newTemplateId },
-        update: {},
-      });
-    }
-  }
-
-  // 4. Import logs (skip duplicates by checking existing loggedAt + projectId combo)
-  let imported = 0;
-  let skipped = 0;
-  for (const l of data.logs) {
-    const newProjectId = l.projectId ? projectMap.get(l.projectId) ?? null : null;
-    const newTemplateId = l.templateId ? templateMap.get(l.templateId) ?? null : null;
-
-    // Skip if no valid project reference
-    if (l.projectId && !newProjectId) {
-      skipped++;
-      continue;
-    }
-
-    // Check for duplicate (same project + timestamp within 1 second)
-    const existingLog = await prisma.log.findFirst({
-      where: {
-        projectId: newProjectId,
-        loggedAt: new Date(l.loggedAt),
-      },
+      };
     });
-
-    if (existingLog) {
-      logMap.set(l.id, existingLog.id);
-      skipped++;
-      continue;
-    }
-
-    const created = await prisma.log.create({
-      data: {
-        projectId: newProjectId,
-        templateId: newTemplateId,
-        values: JSON.stringify(l.values),
-        loggedAt: new Date(l.loggedAt),
-      },
-    });
-    logMap.set(l.id, created.id);
-    imported++;
+  } catch (err) {
+    console.error('Import failed, transaction rolled back:', err);
+    return { error: 'Import failed: ' + (err instanceof Error ? err.message : 'Unknown error') };
   }
-
-  return {
-    success: true,
-    summary: {
-      templates: data.templates.length,
-      projects: data.projects.length,
-      logsImported: imported,
-      logsSkipped: skipped,
-    },
-  };
 }

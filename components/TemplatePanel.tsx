@@ -47,18 +47,29 @@ function CollapsibleSection({
 export function TemplatePanel({ projectId, importedTemplates, availableTemplates }: Props) {
   const [pending, start] = useTransition();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleImport = (templateId: string) => {
+    setError(null);
     start(async () => {
-      await importTemplate(projectId, templateId);
+      try {
+        await importTemplate(projectId, templateId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to import template');
+      }
     });
     setShowDropdown(false);
   };
 
   const handleRemove = (templateId: string) => {
     if (!confirm('Remove this template from the project? (The template itself is not deleted.)')) return;
+    setError(null);
     start(async () => {
-      await removeTemplate(projectId, templateId);
+      try {
+        await removeTemplate(projectId, templateId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to remove template');
+      }
     });
   };
 
@@ -137,6 +148,7 @@ export function TemplatePanel({ projectId, importedTemplates, availableTemplates
           ))
         )}
       </div>
+      {error && <p className="px-4 pb-3 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { deleteLog } from '@/app/actions/logs';
 import { deleteProject } from '@/app/actions/projects';
 
 type Target =
-  | { kind: 'template'; id: string; name: string; logCount: number }
+  | { kind: 'template'; id: string; name: string; logCount: number; projectCount: number }
   | { kind: 'log'; id: string; templateId?: string; returnPath?: string }
   | { kind: 'project'; id: string; name: string; templateCount: number };
 
@@ -16,7 +16,7 @@ export function DeleteButton({ target, className = '' }: { target: Target; class
 
   const message =
     target.kind === 'template'
-      ? `Delete "${target.name}" and its ${target.logCount} entries? This cannot be undone.`
+      ? `Delete "${target.name}"? It is used in ${target.projectCount} project(s). Field definitions will be removed from those projects; log entries themselves will be kept but column headers for this template will disappear. This cannot be undone.`
       : target.kind === 'project'
       ? `Delete project "${target.name}" and remove its ${target.templateCount} template associations? (Templates themselves are not deleted.)`
       : 'Delete this entry?';
