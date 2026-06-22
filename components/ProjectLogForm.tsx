@@ -1,7 +1,8 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createProjectLog } from '@/app/actions/logs';
+import { createProjectLog, updateProjectLog } from '@/app/actions/logs';
 import { validateLogValues } from '@/lib/validate';
 import type { FieldDef, LogValues } from '@/lib/schema';
 
@@ -15,37 +16,13 @@ type Props = {
   projectId: string;
   templates: TemplateGroup[];
   nextSerial: number;
+  editingLog?: { id: string; serial: number; values: LogValues } | null;
+  onCancelEdit?: () => void;
 };
 
-function defaultValue(def: FieldDef): unknown {
-  switch (def.type) {
-    case 'text':
-    case 'richtext':
-    case 'date':
-    case 'time':
-    case 'email':
-    case 'url':
-    case 'phone':
-    case 'select':
-      return '';
-    case 'color':
-      return '#000000';
-    case 'number':
-      return '';
-    case 'boolean':
-      return false;
-    case 'multiselect':
-      return [];
-    case 'slider':
-      return Math.round(((def.min + def.max) / 2) / def.step) * def.step;
-    case 'rating':
-      return 0;
-  }
-}
-
-export function ProjectLogForm({ projectId, templates, nextSerial }: Props) {
+export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, onCancelEdit }: Props) {
   const router = useRouter();
-  const [values, setValues] = useState<LogValues>({});
+  const [values, setValues] = useState<LogValues>(() => editingLog ? editingLog.values : {});
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -62,13 +39,22 @@ export function ProjectLogForm({ projectId, templates, nextSerial }: Props) {
 
     // Validate against all combined fields
     const v = validateLogValues(allFields, values);
-    if (!v.success) { setError(v.error.issues[0]?.message ?? 'Invalid input'); return; }
+    if (!v.success) {
+      setError(v.error.issues[0]?.message ?? 'Invalid input');
+      return;
+    }
 
     setPending(true);
     try {
-      await createProjectLog(projectId, values);
-      setValues({});
-      setSuccess(true);
+      if (editingLog) {
+        await updateProjectLog(editingLog.id, values);
+        setSuccess(true);
+        if (onCancelEdit) onCancelEdit();
+      } else {
+        await createProjectLog(projectId, values);
+        setValues({});
+        setSuccess(true);
+      }
       router.refresh();
     } catch (err) {
       if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) throw err;
@@ -81,8 +67,12 @@ export function ProjectLogForm({ projectId, templates, nextSerial }: Props) {
   return (
     <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
       <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
-        <h2 className="font-medium dark:text-slate-100">Log Entry</h2>
-        <span className="text-xs text-slate-500 dark:text-slate-400">Entry #{nextSerial}</span>
+        <h2 className="font-medium dark:text-slate-100">
+          {editingLog ? `Edit Entry #${editingLog.serial}` : 'Log Entry'}
+        </h2>
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {editingLog ? `Editing entry` : `Entry #${nextSerial}`}
+        </span>
       </div>
 
       <form onSubmit={submit} className="p-4 space-y-6">
@@ -105,18 +95,145 @@ export function ProjectLogForm({ projectId, templates, nextSerial }: Props) {
         ))}
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
-        {success && <p className="text-emerald-600 text-sm">Entry #{nextSerial} saved!</p>}
+        {success && (
+          <p className="text-emerald-600 text-sm">
+            {editingLog ? `Entry #${editingLog.serial} updated!` : `Entry #${nextSerial} saved!`}
+          </p>
+        )}
 
         {templates.length > 0 && (
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-emerald-600 text-white px-4 py-3 text-sm min-h-11 w-full sm:w-auto hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {pending ? 'Saving…' : `Save Entry #${nextSerial}`}
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded bg-emerald-600 text-white px-4 py-3 text-sm min-h-11 w-full sm:w-auto hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {pending ? 'Saving…' : (editingLog ? `Update Entry #${editingLog.serial}` : `Save Entry #${nextSerial}`)}
+            </button>
+            {editingLog && (
+              <button
+                type="button"
+                onClick={onCancelEdit}
+                className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm min-h-11 w-full sm:w-auto text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                Cancel Edit
+              </button>
+            )}
+          </div>
         )}
       </form>
+    </div>
+  );
+}
+
+function SelectInput({ f, value, onChange }: { f: FieldDef & { type: 'select' }; value: unknown; onChange: (v: unknown) => void }) {
+  const valStr = String(value ?? '');
+  const [isOthersSelected, setIsOthersSelected] = useState(() => {
+    return valStr !== '' && !f.options.includes(valStr);
+  });
+
+  const selectValue = isOthersSelected ? 'Others' : (f.options.includes(valStr) ? valStr : '');
+  const inputClass = 'border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 w-full min-h-11 text-sm dark:bg-slate-800 dark:text-slate-100';
+
+  return (
+    <div className="space-y-2 w-full">
+      <select
+        className={inputClass}
+        value={selectValue}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val === 'Others') {
+            setIsOthersSelected(true);
+            onChange(''); // Let user type a custom value
+          } else {
+            setIsOthersSelected(false);
+            onChange(val);
+          }
+        }}
+      >
+        <option value="">— select —</option>
+        {f.options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+        <option value="Others">Others</option>
+      </select>
+
+      {isOthersSelected && (
+        <input
+          type="text"
+          className={inputClass}
+          placeholder="Type custom option..."
+          value={f.options.includes(valStr) ? '' : valStr}
+          onChange={(e) => onChange(e.target.value)}
+          autoFocus
+        />
+      )}
+    </div>
+  );
+}
+
+function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multiselect' }; value: unknown; onChange: (v: unknown) => void }) {
+  const arr = Array.isArray(value) ? (value as string[]) : [];
+  const customValue = arr.find((x) => !f.options.includes(x)) ?? '';
+  const [isOthersChecked, setIsOthersChecked] = useState(() => customValue !== '');
+  const inputClass = 'border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 w-full min-h-11 text-sm dark:bg-slate-800 dark:text-slate-100';
+
+  const handleOthersCheckboxChange = (checked: boolean) => {
+    setIsOthersChecked(checked);
+    if (!checked) {
+      onChange(arr.filter((x) => f.options.includes(x)));
+    } else {
+      if (!arr.includes('')) {
+        onChange([...arr, '']);
+      }
+    }
+  };
+
+  const handleCustomTextChange = (text: string) => {
+    const cleaned = arr.filter((x) => f.options.includes(x));
+    if (text.trim() !== '') {
+      onChange([...cleaned, text]);
+    } else {
+      onChange(cleaned);
+    }
+  };
+
+  return (
+    <div className="space-y-3 w-full">
+      <div className="flex flex-wrap gap-3">
+        {f.options.map((o: string) => (
+          <label key={o} className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11">
+            <input
+              type="checkbox"
+              className="min-h-5 min-w-5"
+              checked={arr.includes(o)}
+              onChange={(e) => {
+                if (e.target.checked) onChange([...arr, o]);
+                else onChange(arr.filter((x) => x !== o));
+              }}
+            />
+            {o}
+          </label>
+        ))}
+        <label className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11">
+          <input
+            type="checkbox"
+            className="min-h-5 min-w-5"
+            checked={isOthersChecked}
+            onChange={(e) => handleOthersCheckboxChange(e.target.checked)}
+          />
+          Others
+        </label>
+      </div>
+
+      {isOthersChecked && (
+        <input
+          type="text"
+          className={inputClass}
+          placeholder="Type custom option..."
+          value={customValue}
+          onChange={(e) => handleCustomTextChange(e.target.value)}
+          autoFocus
+        />
+      )}
     </div>
   );
 }
@@ -131,7 +248,30 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
     case 'number':
       return <input type="number" className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} />;
     case 'boolean':
-      return <label className="inline-flex items-center gap-3 py-2 min-h-11"><input type="checkbox" className="min-h-5 min-w-5" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} /> <span className="text-sm">Yes</span></label>;
+      return (
+        <div className="flex items-center gap-6 py-2 min-h-11">
+          <label className="inline-flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="radio"
+              className="min-h-5 min-w-5 text-emerald-600 focus:ring-emerald-500"
+              name={`boolean-${f.id}`}
+              checked={value === true}
+              onChange={() => onChange(true)}
+            />
+            <span>Yes</span>
+          </label>
+          <label className="inline-flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="radio"
+              className="min-h-5 min-w-5 text-emerald-600 focus:ring-emerald-500"
+              name={`boolean-${f.id}`}
+              checked={value === false}
+              onChange={() => onChange(false)}
+            />
+            <span>No</span>
+          </label>
+        </div>
+      );
     case 'date':
       return <input type="date" className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />;
     case 'time':
@@ -150,33 +290,9 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
         </div>
       );
     case 'select':
-      return (
-        <select className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value)}>
-          <option value="">— select —</option>
-          {f.options.map((o: string) => <option key={o} value={o}>{o}</option>)}
-        </select>
-      );
-    case 'multiselect': {
-      const arr = Array.isArray(value) ? (value as string[]) : [];
-      return (
-        <div className="flex flex-wrap gap-3">
-          {f.options.map((o: string) => (
-            <label key={o} className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11">
-              <input
-                type="checkbox"
-                className="min-h-5 min-w-5"
-                checked={arr.includes(o)}
-                onChange={(e) => {
-                  if (e.target.checked) onChange([...arr, o]);
-                  else onChange(arr.filter((x) => x !== o));
-                }}
-              />
-              {o}
-            </label>
-          ))}
-        </div>
-      );
-    }
+      return <SelectInput f={f as any} value={value} onChange={onChange} />;
+    case 'multiselect':
+      return <MultiSelectInput f={f as any} value={value} onChange={onChange} />;
     case 'slider':
       return (
         <div className="flex items-center gap-4">

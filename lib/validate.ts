@@ -39,9 +39,11 @@ const valueSchemaFor = (def: FieldDef): z.ZodTypeAny => {
         ? z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use #RRGGBB format')
         : z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use #RRGGBB format').optional();
     case 'select':
-      return def.required ? optEnum(def.options) : optEnum(def.options).optional();
+      return def.required
+        ? z.string().refine((s) => s.trim().length > 0, { message: 'cannot be empty' })
+        : z.string().optional();
     case 'multiselect': {
-      const arr = z.array(optEnum(def.options));
+      const arr = z.array(z.string());
       return def.required ? arr.min(1) : arr.optional();
     }
     case 'slider': {

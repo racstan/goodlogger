@@ -38,3 +38,37 @@ export async function deleteLog(id: string, returnPath?: string) {
     revalidatePath(returnPath);
   }
 }
+
+/** Update an existing log entry. */
+export async function updateProjectLog(logId: string, values: LogValues) {
+  const log = await prisma.log.findUnique({
+    where: { id: logId },
+  });
+  if (!log) throw new Error('Log not found');
+
+  if (!log.projectId) throw new Error('Log does not belong to a project');
+
+  const project = await prisma.project.findUnique({
+    where: { id: log.projectId },
+    include: { templates: { include: { template: true } } },
+  });
+  if (!project) throw new Error('Project not found');
+
+  // Collect all fields from all templates in the project
+  const allFields: FieldDef[] = [];
+  for (const pt of project.templates) {
+    const fields = JSON.parse(pt.template.fields) as FieldDef[];
+    allFields.push(...fields);
+  }
+
+  // Validate against combined fields
+  const v = validateLogValues(allFields, values);
+  if (!v.success) throw new Error(v.error.issues[0]?.message ?? 'Invalid log');
+
+  await prisma.log.update({
+    where: { id: logId },
+    data: { values: JSON.stringify(values) },
+  });
+
+  revalidatePath(`/projects/${log.projectId}`);
+}

@@ -55,12 +55,12 @@ describe('buildLogValueSchema', () => {
     expect(r.success).toBe(true);
   });
 
-  it('rejects multiselect with option not in list', () => {
+  it('accepts multiselect with option not in list', () => {
     const r = buildLogValueSchema(defs).safeParse({
       [fid(1)]: 'A', [fid(2)]: true, [fid(3)]: 5,
       [fid(4)]: ['Bogus'], [fid(5)]: '09:00', [fid(7)]: 1,
     });
-    expect(r.success).toBe(false);
+    expect(r.success).toBe(true);
   });
 
   it('rejects text with empty string when required', () => {
