@@ -16,6 +16,7 @@ const TYPES: { value: FieldType; label: string }[] = [
   { value: 'color', label: 'Color' },
   { value: 'richtext', label: 'Rich Text' },
   { value: 'rating', label: 'Rating (stars)' },
+  { value: 'incrementer', label: 'Incrementer' },
 ];
 
 type Props = {
@@ -128,6 +129,74 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
           <label>max stars <input type="number" className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 dark:bg-slate-800 dark:text-slate-100" value={field.max ?? 5} onChange={(e) => update({ max: Number(e.target.value) } as Partial<FieldDef>)} /></label>
         </div>
       )}
+
+      {field.type === 'incrementer' && (
+        <div className="pl-8 space-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-slate-500">Subtype:</span>
+            <select
+              className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 dark:bg-slate-800 dark:text-slate-100"
+              value={field.incType}
+              onChange={(e) => update({ incType: e.target.value as any } as Partial<FieldDef>)}
+            >
+              <option value="number">Number (0, 1, 2...)</option>
+              <option value="character">Character (a-z loop)</option>
+              <option value="date">Date & Day Incrementer</option>
+              <option value="sequence">Sequence Loop</option>
+            </select>
+          </div>
+
+          {field.incType === 'character' && (
+            <div className="flex items-center gap-2">
+              <label>
+                Starting character:
+                <input
+                  type="text"
+                  maxLength={1}
+                  className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-16 ml-2 dark:bg-slate-800 dark:text-slate-100"
+                  value={field.startChar ?? 'a'}
+                  onChange={(e) => update({ startChar: e.target.value } as Partial<FieldDef>)}
+                />
+              </label>
+            </div>
+          )}
+
+          {field.incType === 'date' && (
+            <div className="flex flex-wrap gap-3">
+              <label>
+                Starting date:
+                <input
+                  type="date"
+                  className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 ml-2 dark:bg-slate-800 dark:text-slate-100"
+                  value={field.startDate ?? ''}
+                  onChange={(e) => update({ startDate: e.target.value } as Partial<FieldDef>)}
+                />
+              </label>
+              <label>
+                Default step (days):
+                <input
+                  type="number"
+                  className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 ml-2 dark:bg-slate-800 dark:text-slate-100"
+                  value={field.dateStep ?? 1}
+                  onChange={(e) => update({ dateStep: Number(e.target.value) } as Partial<FieldDef>)}
+                />
+              </label>
+            </div>
+          )}
+
+          {field.incType === 'sequence' && (
+            <div className="space-y-1">
+              <label className="block">Sequence items (separated by commas or arrows `-&gt;`):</label>
+              <textarea
+                className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-full h-16 dark:bg-slate-800 dark:text-slate-100"
+                placeholder="e.g. ant -> rabbit -> potato"
+                value={field.sequence ?? ''}
+                onChange={(e) => update({ sequence: e.target.value } as Partial<FieldDef>)}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -154,5 +223,7 @@ export function makeField(type: FieldType, name = '', required = false): FieldDe
       return { id, name, type: 'slider', required, min: 0, max: 10, step: 1 };
     case 'rating':
       return { id, name, type: 'rating', required, max: 5 };
+    case 'incrementer':
+      return { id, name, type: 'incrementer', required, incType: 'number', startChar: 'a', startDate: '', dateStep: 1, sequence: '' };
   }
 }

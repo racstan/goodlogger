@@ -30,6 +30,9 @@ function formatCell(v: LogValue | undefined): string {
   if (v === undefined || v === null || v === '') return '—';
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'object' && v !== null && 'value' in v && !Array.isArray(v)) {
+    return String(v.value);
+  }
   return String(v);
 }
 
@@ -159,6 +162,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
           nextSerial={nextSerial}
           editingLog={editingLog ? { id: editingLog.id, serial: editingLog.serial, values: editingLog.values } : null}
           onCancelEdit={cancelEdit}
+          parsedLogs={parsedLogs}
         />
       </div>
     </div>

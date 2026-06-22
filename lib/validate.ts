@@ -56,6 +56,15 @@ const valueSchemaFor = (def: FieldDef): z.ZodTypeAny => {
       const n = z.number().min(0).max(max, { message: `must be between 0 and ${max}` });
       return def.required ? n : n.optional();
     }
+    case 'incrementer':
+      return z.union([
+        z.string(),
+        z.object({
+          value: z.string(),
+          rawDate: z.string().optional(),
+          step: z.number().optional(),
+        })
+      ]);
   }
 };
 

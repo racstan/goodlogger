@@ -14,7 +14,8 @@ export type FieldType =
   | 'phone'
   | 'color'
   | 'richtext'
-  | 'rating';
+  | 'rating'
+  | 'incrementer';
 
 type Base = { id: string; name: string; required: boolean };
 
@@ -23,9 +24,17 @@ export type FieldDef =
   | (Base & { type: 'boolean' })
   | (Base & { type: 'select' | 'multiselect'; options: string[] })
   | (Base & { type: 'slider'; min: number; max: number; step: number })
-  | (Base & { type: 'rating'; max?: number });
+  | (Base & { type: 'rating'; max?: number })
+  | (Base & {
+      type: 'incrementer';
+      incType: 'number' | 'character' | 'date' | 'sequence';
+      startChar?: string;
+      startDate?: string;
+      dateStep?: number;
+      sequence?: string;
+    });
 
-export type LogValue = string | number | boolean | string[];
+export type LogValue = string | number | boolean | string[] | { value: string; rawDate?: string; step?: number };
 export type LogValues = Record<string, LogValue>;
 
 export function newFieldId(): string {
@@ -68,6 +77,17 @@ export const fieldDefSchema = z.discriminatedUnion('type', [
     type: z.literal('rating'),
     max: z.number().optional(),
   }),
+  z.object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    required: z.boolean(),
+    type: z.literal('incrementer'),
+    incType: z.enum(['number', 'character', 'date', 'sequence']),
+    startChar: z.string().optional(),
+    startDate: z.string().optional(),
+    dateStep: z.number().optional(),
+    sequence: z.string().optional(),
+  }),
 ]);
 
 export type ValidationResult = { ok: true } | { ok: false; error: string };
@@ -80,6 +100,26 @@ export function validateFieldDef(def: FieldDef): ValidationResult {
   if (!r.success) return { ok: false, error: r.error.issues[0]?.message ?? 'Invalid field' };
   if (probe.type === 'slider' && probe.min >= probe.max) {
     return { ok: false, error: 'min must be less than max' };
+  }
+  if (probe.type === 'incrementer') {
+    if (probe.incType === 'character') {
+      const char = (probe.startChar || '').trim();
+      if (char.length !== 1 || !/[a-zA-Z]/.test(char)) {
+        return { ok: false, error: 'Character incrementer must start with a single letter (a-z or A-Z)' };
+      }
+    }
+    if (probe.incType === 'date' && probe.startDate) {
+      const dateStr = probe.startDate.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || isNaN(Date.parse(dateStr))) {
+        return { ok: false, error: 'Start date must be in YYYY-MM-DD format' };
+      }
+    }
+    if (probe.incType === 'sequence') {
+      const seq = (probe.sequence || '').trim();
+      if (!seq) {
+        return { ok: false, error: 'Sequence definition is required (e.g. ant-> rabbit-> potato)' };
+      }
+    }
   }
   return { ok: true };
 }

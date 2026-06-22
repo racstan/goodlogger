@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createProjectLog, updateProjectLog } from '@/app/actions/logs';
 import { validateLogValues } from '@/lib/validate';
 import type { FieldDef, LogValues } from '@/lib/schema';
+import { getNextIncrementerValue } from '@/lib/incrementer';
 
 type TemplateGroup = {
   id: string;
@@ -18,11 +19,33 @@ type Props = {
   nextSerial: number;
   editingLog?: { id: string; serial: number; values: LogValues } | null;
   onCancelEdit?: () => void;
+  parsedLogs?: { id: string; values: LogValues; loggedAt: string; serial: number }[];
 };
 
-export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, onCancelEdit }: Props) {
+export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, onCancelEdit, parsedLogs }: Props) {
   const router = useRouter();
-  const [values, setValues] = useState<LogValues>(() => editingLog ? editingLog.values : {});
+  const [values, setValues] = useState<LogValues>(() => {
+    if (editingLog) return editingLog.values;
+    const initial: LogValues = {};
+    for (const t of templates) {
+      for (const f of t.fields) {
+        if (f.type === 'incrementer') {
+          let lastVal: any = undefined;
+          if (parsedLogs && parsedLogs.length > 0) {
+            for (let i = parsedLogs.length - 1; i >= 0; i--) {
+              const log = parsedLogs[i];
+              if (log.values && log.values[f.id] !== undefined && log.values[f.id] !== null) {
+                lastVal = log.values[f.id];
+                break;
+              }
+            }
+          }
+          initial[f.id] = getNextIncrementerValue(f, lastVal);
+        }
+      }
+    }
+    return initial;
+  });
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -52,7 +75,16 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
         if (onCancelEdit) onCancelEdit();
       } else {
         await createProjectLog(projectId, values);
-        setValues({});
+        const nextValues: LogValues = {};
+        for (const t of templates) {
+          for (const f of t.fields) {
+            if (f.type === 'incrementer') {
+              const currentVal = values[f.id];
+              nextValues[f.id] = getNextIncrementerValue(f, currentVal);
+            }
+          }
+        }
+        setValues(nextValues);
         setSuccess(true);
       }
       router.refresh();
@@ -318,6 +350,51 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
           <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">{current}/{max}</span>
         </div>
       );
+    }
+    case 'incrementer': {
+      const incVal = (value as any) || { value: '' };
+      if (f.incType === 'date') {
+        const stepVal = typeof incVal.step === 'number' ? incVal.step : (f.dateStep ?? 1);
+        return (
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Calculated Date:</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 font-mono">
+                {incVal.value || '—'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                Step (days) for next increment:
+              </label>
+              <input
+                type="number"
+                min={1}
+                className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 text-sm dark:bg-slate-800 dark:text-slate-100"
+                value={stepVal}
+                onChange={(e) => {
+                  const s = parseInt(e.target.value, 10);
+                  onChange({
+                    ...incVal,
+                    step: isNaN(s) || s < 1 ? 1 : s
+                  });
+                }}
+              />
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              Next Value ({f.incType}):
+            </span>
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 font-mono">
+              {incVal.value || '—'}
+            </span>
+          </div>
+        );
+      }
     }
   }
 }

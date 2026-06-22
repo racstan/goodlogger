@@ -18,6 +18,9 @@ function formatLocalDateTime(d: Date): string {
 
 function formatValue(def: FieldDef, v: LogValue | undefined): string {
   if (v === undefined || v === null || v === '') return '';
+  if (typeof v === 'object' && v !== null && 'value' in v && !Array.isArray(v)) {
+    return String(v.value);
+  }
   switch (def.type) {
     case 'text':
     case 'richtext':
@@ -39,6 +42,8 @@ function formatValue(def: FieldDef, v: LogValue | undefined): string {
     case 'date':
       return String(v);
     case 'time':
+      return String(v);
+    case 'incrementer':
       return String(v);
   }
 }
