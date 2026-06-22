@@ -10,11 +10,8 @@ type Project = {
   id: string;
   name: string;
   description: string;
-  templates: {
-    template: {
-      _count: { logs: number };
-    };
-  }[];
+  templates: { template: { name: string } }[];
+  _count: { logs: number };
 };
 
 type LogDate = { date: string; count: number };

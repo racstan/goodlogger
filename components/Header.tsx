@@ -44,12 +44,7 @@ export function Header({ user }: { user: User }) {
           >
             Settings
           </a>
-          <a
-            href="/templates/new"
-            className="rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-1.5 text-sm hover:bg-slate-700 dark:hover:bg-slate-300"
-          >
-            + New Template
-          </a>
+
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-slate-500">{user.name}</span>
@@ -109,13 +104,7 @@ export function Header({ user }: { user: User }) {
           >
             Templates
           </a>
-          <a
-            href="/templates/new"
-            onClick={() => setOpen(false)}
-            className="block w-full text-center rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-2.5 text-sm mt-2"
-          >
-            + New Template
-          </a>
+
           <a
             href="/settings"
             onClick={() => setOpen(false)}

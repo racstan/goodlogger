@@ -8,11 +8,8 @@ type Project = {
   id: string;
   name: string;
   description: string;
-  templates: {
-    template: {
-      _count: { logs: number };
-    };
-  }[];
+  templates: { template: { name: string } }[];
+  _count: { logs: number };
 };
 
 type Props = {
@@ -34,10 +31,7 @@ export function ProjectsPanel({ projects }: Props) {
       <ProjectForm />
       <ul className="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         {projects.map((p) => {
-          const totalEntries = p.templates.reduce(
-            (sum: number, pt: { template: { _count: { logs: number } } }) => sum + pt.template._count.logs,
-            0
-          );
+          const totalEntries = p._count.logs;
           return (
             <li key={p.id} className="flex items-center justify-between px-4 py-3">
               <Link

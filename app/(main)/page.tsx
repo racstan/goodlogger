@@ -5,14 +5,13 @@ import type { FieldDef } from '@/lib/schema';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // Fetch projects with template counts
+  // Fetch projects with per-project log counts
   const projects = await prisma.project.findMany({
     include: {
       templates: {
-        include: {
-          template: { include: { _count: { select: { logs: true } } } },
-        },
+        include: { template: true },
       },
+      _count: { select: { logs: true } },
     },
     orderBy: { createdAt: 'asc' },
   });
