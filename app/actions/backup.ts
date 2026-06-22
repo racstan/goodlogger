@@ -179,3 +179,61 @@ export async function importData(data: ExportData) {
     return { error: 'Import failed: ' + (err instanceof Error ? err.message : 'Unknown error') };
   }
 }
+
+export async function getBackupMetadata() {
+  const projects = await prisma.project.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+  const templates = await prisma.template.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+  return { projects, templates };
+}
+
+export async function exportSelected(projectIds: string[], templateIds: string[]): Promise<ExportData> {
+  const templates = await prisma.template.findMany({
+    where: { id: { in: templateIds } },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const projects = await prisma.project.findMany({
+    where: { id: { in: projectIds } },
+    include: { templates: { select: { templateId: true } } },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const logs = await prisma.log.findMany({
+    where: {
+      OR: [
+        { projectId: { in: projectIds } },
+        { templateId: { in: templateIds } },
+      ],
+    },
+    orderBy: { loggedAt: 'asc' },
+  });
+
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    templates: templates.map((t) => ({
+      id: t.id,
+      name: t.name,
+      fields: JSON.parse(t.fields) as FieldDef[],
+    })),
+    projects: projects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      templateIds: p.templates.map((pt) => pt.templateId),
+    })),
+    logs: logs.map((l) => ({
+      id: l.id,
+      projectId: l.projectId,
+      templateId: l.templateId,
+      values: JSON.parse(l.values) as Record<string, unknown>,
+      loggedAt: l.loggedAt.toISOString(),
+    })),
+  };
+}
