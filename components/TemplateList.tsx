@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { DeleteButton } from './DeleteButton';
+import { NewTemplateButton } from './NewTemplateButton';
 
 export async function TemplateList() {
   const templates = await prisma.template.findMany({
@@ -9,7 +10,12 @@ export async function TemplateList() {
   });
 
   if (templates.length === 0) {
-    return <p className="text-slate-500 dark:text-slate-400">No templates yet. Create one to start logging.</p>;
+    return (
+      <div className="text-center py-8">
+        <p className="text-slate-500 dark:text-slate-400 mb-4">No templates yet. Create one to start logging.</p>
+        <NewTemplateButton />
+      </div>
+    );
   }
 
   return (
