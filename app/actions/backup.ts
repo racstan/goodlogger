@@ -9,6 +9,7 @@ export type ExportData = {
   templates: {
     id: string;
     name: string;
+    description: string;
     fields: FieldDef[];
   }[];
   projects: {
@@ -46,6 +47,7 @@ export async function exportAll(): Promise<ExportData> {
     templates: templates.map((t) => ({
       id: t.id,
       name: t.name,
+      description: t.description,
       fields: JSON.parse(t.fields) as FieldDef[],
     })),
     projects: projects.map((p) => ({
@@ -83,11 +85,11 @@ export async function importData(data: ExportData) {
           templateMap.set(t.id, existing.id);
           await tx.template.update({
             where: { id: existing.id },
-            data: { fields: JSON.stringify(t.fields) },
+            data: { description: t.description ?? '', fields: JSON.stringify(t.fields) },
           });
         } else {
           const created = await tx.template.create({
-            data: { name: t.name, fields: JSON.stringify(t.fields) },
+            data: { name: t.name, description: t.description ?? '', fields: JSON.stringify(t.fields) },
           });
           templateMap.set(t.id, created.id);
         }
@@ -220,6 +222,7 @@ export async function exportSelected(projectIds: string[], templateIds: string[]
     templates: templates.map((t) => ({
       id: t.id,
       name: t.name,
+      description: t.description,
       fields: JSON.parse(t.fields) as FieldDef[],
     })),
     projects: projects.map((p) => ({

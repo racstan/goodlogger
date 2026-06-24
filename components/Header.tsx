@@ -16,7 +16,8 @@ export function Header({ user }: { user: User }) {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex gap-4 text-sm">
-          <a href="/" className="text-slate-600 hover:text-slate-900">Projects</a>
+          <a href="/" className="text-slate-600 hover:text-slate-900">Dashboard</a>
+          <a href="/projects" className="text-slate-600 hover:text-slate-900">Projects</a>
           <a href="/templates" className="text-slate-600 hover:text-slate-900">Templates</a>
         </nav>
 
@@ -92,6 +93,13 @@ export function Header({ user }: { user: User }) {
         <div className="md:hidden border-t border-slate-200 dark:border-slate-700 px-4 py-3 space-y-1 bg-white dark:bg-slate-900">
           <a
             href="/"
+            onClick={() => setOpen(false)}
+            className="block rounded px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Dashboard
+          </a>
+          <a
+            href="/projects"
             onClick={() => setOpen(false)}
             className="block rounded px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >

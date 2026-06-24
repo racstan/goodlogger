@@ -28,6 +28,7 @@ export async function TemplateList() {
           <li key={t.id} className="flex items-center justify-between px-4 py-3 gap-2">
             <div className="min-w-0 flex-1">
               <div className="font-medium truncate">{t.name}</div>
+              {t.description && <div className="text-xs text-slate-400 dark:text-slate-500 truncate">{t.description}</div>}
               <div className="text-xs text-slate-500 dark:text-slate-400">
                 {fieldCount} field{fieldCount === 1 ? '' : 's'} · used in {projectCount} project{projectCount === 1 ? '' : 's'} · {logCount} direct entr{logCount === 1 ? 'y' : 'ies'}
               </div>

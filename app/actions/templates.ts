@@ -12,13 +12,14 @@ function parseFields(raw: unknown): FieldDef[] {
 
 export async function createTemplate(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
   const fields = parseFields(JSON.parse(String(formData.get('fields') ?? '[]')));
   if (!name) throw new Error('Name is required');
   const v = validateFieldDefs(fields);
   if (!v.ok) throw new Error(v.error);
   try {
     const t = await prisma.template.create({
-      data: { name, fields: JSON.stringify(fields) },
+      data: { name, description, fields: JSON.stringify(fields) },
     });
     revalidatePath('/');
     redirect(`/templates/${t.id}/edit`);
@@ -32,6 +33,7 @@ export async function createTemplate(formData: FormData) {
 
 export async function updateTemplate(id: string, formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
   const fields = parseFields(JSON.parse(String(formData.get('fields') ?? '[]')));
   if (!name) throw new Error('Name is required');
   const v = validateFieldDefs(fields);
@@ -39,7 +41,7 @@ export async function updateTemplate(id: string, formData: FormData) {
   try {
     await prisma.template.update({
       where: { id },
-      data: { name, fields: JSON.stringify(fields) },
+      data: { name, description, fields: JSON.stringify(fields) },
     });
     revalidatePath('/');
     revalidatePath(`/templates/${id}/edit`);

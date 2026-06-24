@@ -5,17 +5,6 @@ import type { FieldDef } from '@/lib/schema';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // Fetch projects with per-project log counts
-  const projects = await prisma.project.findMany({
-    include: {
-      templates: {
-        include: { template: true },
-      },
-      _count: { select: { logs: true } },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
-
   // Fetch all logs grouped by date for the calendar
   const allLogs = await prisma.log.findMany({
     select: {
@@ -49,15 +38,9 @@ export default async function HomePage() {
   }));
 
   // Collect all field definitions from templates used in projects
-  const templateIds = new Set<string>();
-  for (const p of projects) {
-    for (const pt of p.templates) {
-      templateIds.add(pt.templateId);
-    }
-  }
-
+  const projectIds = recentLogs.filter((l) => l.projectId).map((l) => l.projectId!);
   const templates = await prisma.template.findMany({
-    where: { id: { in: Array.from(templateIds) } },
+    where: { projects: { some: { projectId: { in: projectIds } } } },
     select: { name: true, fields: true },
   });
 
@@ -68,7 +51,6 @@ export default async function HomePage() {
 
   return (
     <Dashboard
-      projects={projects}
       logDates={logDates}
       recentLogs={recentLogs}
       allFields={allFields}

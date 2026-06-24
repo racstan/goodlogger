@@ -8,13 +8,15 @@ import { createTemplate, updateTemplate } from '@/app/actions/templates';
 type Props = {
   templateId?: string;
   initialName?: string;
+  initialDescription?: string;
   initialFields?: FieldDef[];
   hasLogs?: boolean;
 };
 
-export function TemplateDesigner({ templateId, initialName = '', initialFields = [], hasLogs = false }: Props) {
+export function TemplateDesigner({ templateId, initialName = '', initialDescription = '', initialFields = [], hasLogs = false }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
+  const [description, setDescription] = useState(initialDescription);
   const [fields, setFields] = useState<FieldDef[]>(
     initialFields.length > 0 ? initialFields : [makeField('text', 'Field 1')]
   );
@@ -44,6 +46,7 @@ export function TemplateDesigner({ templateId, initialName = '', initialFields =
 
     const fd = new FormData();
     fd.set('name', name.trim());
+    fd.set('description', description.trim());
     fd.set('fields', JSON.stringify(fields));
     setPending(true);
     try {
@@ -73,6 +76,15 @@ export function TemplateDesigner({ templateId, initialName = '', initialFields =
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Daily Standup"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Description <span className="text-slate-400 font-normal">(optional)</span></label>
+        <input
+          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 w-full dark:bg-slate-800 dark:text-slate-100"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="What is this template for?"
         />
       </div>
       <div className="space-y-2">

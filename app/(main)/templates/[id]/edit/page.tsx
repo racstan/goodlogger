@@ -26,6 +26,7 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
       <TemplateDesigner
         templateId={t.id}
         initialName={t.name}
+        initialDescription={t.description}
         initialFields={fields}
         hasLogs={totalEntries > 0}
       />

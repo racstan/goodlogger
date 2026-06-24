@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Template {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  fields    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  logs      Log[]
-  projects  ProjectTemplate[]
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String   @default("")
+  fields      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  logs        Log[]
+  projects    ProjectTemplate[]
 }
 
 model Log {
