@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CldUploadWidget } from 'next-cloudinary';
 import { FieldDef } from '@/lib/schema';
 import { AudioRecorder } from './AudioRecorder';
+import { CameraRecorder } from './CameraRecorder';
 
 type Props = {
   f: FieldDef;
@@ -75,13 +76,24 @@ export function MediaUploadField({ f, value, onChange }: Props) {
 
       <div className={valStr ? 'hidden' : 'block'}>
         {showRecorder ? (
-          <AudioRecorder
-            onUploadSuccess={(url) => {
-              onChange(url);
-              setShowRecorder(false);
-            }}
-            onCancel={() => setShowRecorder(false)}
-          />
+          f.type === 'audio' ? (
+            <AudioRecorder
+              onUploadSuccess={(url) => {
+                onChange(url);
+                setShowRecorder(false);
+              }}
+              onCancel={() => setShowRecorder(false)}
+            />
+          ) : (
+            <CameraRecorder
+              mode={f.type === 'image' ? 'image' : 'video'}
+              onUploadSuccess={(url) => {
+                onChange(url);
+                setShowRecorder(false);
+              }}
+              onCancel={() => setShowRecorder(false)}
+            />
+          )
         ) : (
           <div className="flex flex-col gap-2">
             <CldUploadWidget
@@ -142,6 +154,34 @@ export function MediaUploadField({ f, value, onChange }: Props) {
                   <line x1="12" y1="19" x2="12" y2="22"></line>
                 </svg>
                 Or Record Microphone
+              </button>
+            )}
+
+            {f.type === 'video' && (
+              <button
+                type="button"
+                onClick={() => setShowRecorder(true)}
+                className="w-full py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 7l-7 5 7 5V7z"></path>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+                Or Record Camera
+              </button>
+            )}
+
+            {f.type === 'image' && (
+              <button
+                type="button"
+                onClick={() => setShowRecorder(true)}
+                className="w-full py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                  <circle cx="12" cy="13" r="3"></circle>
+                </svg>
+                Or Take Photo
               </button>
             )}
           </div>
