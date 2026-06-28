@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { CldUploadWidget } from 'next-cloudinary';
+import { useState, useRef } from 'react';
 import { FieldDef } from '@/lib/schema';
 import { AudioRecorder } from './AudioRecorder';
-import { CameraRecorder } from './CameraRecorder';
 
 type Props = {
   f: FieldDef;
@@ -17,6 +15,7 @@ export function MediaUploadField({ f, value, onChange }: Props) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const valStr = typeof value === 'string' ? value : '';
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDirectUpload = async (file: File) => {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -46,9 +45,19 @@ export function MediaUploadField({ f, value, onChange }: Props) {
     e.preventDefault();
     setDragActive(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleDirectUpload(file);
-    }
+    if (file) handleDirectUpload(file);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleDirectUpload(file);
+  };
+
+  const getAccept = () => {
+    if (f.type === 'image') return 'image/png, image/jpeg, image/webp, image/gif';
+    if (f.type === 'video') return 'video/mp4, video/webm, video/ogg';
+    if (f.type === 'audio') return 'audio/mp3, audio/wav, audio/ogg';
+    return undefined;
   };
 
   return (
@@ -76,71 +85,40 @@ export function MediaUploadField({ f, value, onChange }: Props) {
 
       <div className={valStr ? 'hidden' : 'block'}>
         {showRecorder ? (
-          f.type === 'audio' ? (
-            <AudioRecorder
-              onUploadSuccess={(url) => {
-                onChange(url);
-                setShowRecorder(false);
-              }}
-              onCancel={() => setShowRecorder(false)}
-            />
-          ) : (
-            <CameraRecorder
-              mode={f.type === 'image' ? 'image' : 'video'}
-              onUploadSuccess={(url) => {
-                onChange(url);
-                setShowRecorder(false);
-              }}
-              onCancel={() => setShowRecorder(false)}
-            />
-          )
+          <AudioRecorder
+            onUploadSuccess={(url) => {
+              onChange(url);
+              setShowRecorder(false);
+            }}
+            onCancel={() => setShowRecorder(false)}
+          />
         ) : (
           <div className="flex flex-col gap-2">
-            <CldUploadWidget
-              uploadPreset="goodlogger_unsigned"
-              onSuccess={(result) => {
-                // Force reset body overflow in case the widget modal locks it
-                document.body.style.overflow = '';
-                if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
-                  onChange(result.info.secure_url);
-                }
-              }}
-              options={{
-                clientAllowedFormats:
-                  f.type === 'image'
-                    ? ['png', 'jpeg', 'webp', 'gif']
-                    : f.type === 'video'
-                    ? ['mp4', 'webm', 'ogg']
-                    : f.type === 'audio'
-                    ? ['mp3', 'wav', 'ogg']
-                    : undefined,
-                maxFiles: 1,
-                sources: ['local', 'camera', 'url'],
-              }}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleChange}
+              accept={getAccept()}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+              disabled={isUploading}
+              className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm ${
+                dragActive
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
+                  : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+              }`}
             >
-              {({ open }) => {
-                return (
-                  <button
-                    type="button"
-                    onClick={() => open()}
-                    onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-                    onDragLeave={() => setDragActive(false)}
-                    onDrop={handleDrop}
-                    disabled={isUploading}
-                    className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm ${
-                      dragActive
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
-                        : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <span className="mb-2">
-                      {isUploading ? 'Uploading...' : `Click or Drag & Drop to upload ${f.type}`}
-                    </span>
-                    {!isUploading && <span className="text-xs opacity-75">Max 1 file</span>}
-                  </button>
-                );
-              }}
-            </CldUploadWidget>
+              <span className="mb-2">
+                {isUploading ? 'Uploading...' : `Click or Drag & Drop to upload ${f.type}`}
+              </span>
+              {!isUploading && <span className="text-xs opacity-75">Max 1 file</span>}
+            </button>
 
             {f.type === 'audio' && (
               <button
@@ -154,34 +132,6 @@ export function MediaUploadField({ f, value, onChange }: Props) {
                   <line x1="12" y1="19" x2="12" y2="22"></line>
                 </svg>
                 Or Record Microphone
-              </button>
-            )}
-
-            {f.type === 'video' && (
-              <button
-                type="button"
-                onClick={() => setShowRecorder(true)}
-                className="w-full py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 7l-7 5 7 5V7z"></path>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
-                Or Record Camera
-              </button>
-            )}
-
-            {f.type === 'image' && (
-              <button
-                type="button"
-                onClick={() => setShowRecorder(true)}
-                className="w-full py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
-                  <circle cx="12" cy="13" r="3"></circle>
-                </svg>
-                Or Take Photo
               </button>
             )}
           </div>
