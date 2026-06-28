@@ -122,23 +122,25 @@ export function MediaUploadField({ f, value, onChange }: Props) {
             </CldUploadWidget>
 
             {/* Custom Drag and Drop box */}
-            <div
-              tabIndex={0}
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={handleDrop}
-              onPaste={handlePaste}
-              className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-                dragActive
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
-                  : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <span className="mb-2 font-medium">
-                {isUploading ? 'Uploading...' : `Or Drag & Drop / Paste here`}
-              </span>
-              {!isUploading && <span className="text-xs opacity-75">Bypasses adblockers (max 10MB)</span>}
-            </div>
+            {f.type !== 'audio' && (
+              <div
+                tabIndex={0}
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={handleDrop}
+                onPaste={handlePaste}
+                className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                  dragActive
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
+                    : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <span className="mb-2 font-medium">
+                  {isUploading ? 'Uploading...' : `Or Drag & Drop / Paste here`}
+                </span>
+                {!isUploading && <span className="text-xs opacity-75">Bypasses adblockers (max 10MB)</span>}
+              </div>
+            )}
 
             {f.type === 'audio' && (
               <button
