@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { CldUploadWidget } from 'next-cloudinary';
 import { FieldDef } from '@/lib/schema';
 import { AudioRecorder } from './AudioRecorder';
 
@@ -15,7 +16,6 @@ export function MediaUploadField({ f, value, onChange }: Props) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const valStr = typeof value === 'string' ? value : '';
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDirectUpload = async (file: File) => {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -53,18 +53,6 @@ export function MediaUploadField({ f, value, onChange }: Props) {
     if (file) handleDirectUpload(file);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleDirectUpload(file);
-  };
-
-  const getAccept = () => {
-    if (f.type === 'image') return 'image/png, image/jpeg, image/webp, image/gif';
-    if (f.type === 'video') return 'video/mp4, video/webm, video/ogg';
-    if (f.type === 'audio') return 'audio/mp3, audio/wav, audio/ogg';
-    return undefined;
-  };
-
   return (
     <div className="space-y-3">
       {valStr ? (
@@ -99,32 +87,58 @@ export function MediaUploadField({ f, value, onChange }: Props) {
           />
         ) : (
           <div className="flex flex-col gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleChange}
-              accept={getAccept()}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
+            <CldUploadWidget
+              uploadPreset="goodlogger_unsigned"
+              onSuccess={(result) => {
+                document.body.style.overflow = '';
+                if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
+                  onChange(result.info.secure_url);
+                }
+              }}
+              options={{
+                clientAllowedFormats:
+                  f.type === 'image'
+                    ? ['png', 'jpeg', 'webp', 'gif']
+                    : f.type === 'video'
+                    ? ['mp4', 'webm', 'ogg']
+                    : f.type === 'audio'
+                    ? ['mp3', 'wav', 'ogg']
+                    : undefined,
+                maxFiles: 1,
+                sources: ['local', 'camera', 'url'],
+              }}
+            >
+              {({ open }) => {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => open()}
+                    className="w-full py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Click to Open Uploader
+                  </button>
+                );
+              }}
+            </CldUploadWidget>
+
+            {/* Custom Drag and Drop box */}
+            <div
+              tabIndex={0}
               onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
               onDragLeave={() => setDragActive(false)}
               onDrop={handleDrop}
               onPaste={handlePaste}
-              disabled={isUploading}
-              className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm ${
+              className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                 dragActive
                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
                   : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
             >
-              <span className="mb-2">
-                {isUploading ? 'Uploading...' : `Click, Drag, or Paste to upload ${f.type}`}
+              <span className="mb-2 font-medium">
+                {isUploading ? 'Uploading...' : `Or Drag & Drop / Paste here`}
               </span>
-              {!isUploading && <span className="text-xs opacity-75">Max 1 file</span>}
-            </button>
+              {!isUploading && <span className="text-xs opacity-75">Bypasses adblockers (max 10MB)</span>}
+            </div>
 
             {f.type === 'audio' && (
               <button
