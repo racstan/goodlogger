@@ -194,7 +194,7 @@ function SelectInput({ f, value, onChange }: { f: FieldDef & { type: 'select' };
           type="text"
           className={inputClass}
           placeholder="Type custom option..."
-          value={f.options.includes(valStr) ? '' : valStr}
+          value={valStr}
           onChange={(e) => onChange(e.target.value)}
           autoFocus
         />
@@ -205,25 +205,33 @@ function SelectInput({ f, value, onChange }: { f: FieldDef & { type: 'select' };
 
 function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multiselect' }; value: unknown; onChange: (v: unknown) => void }) {
   const arr = Array.isArray(value) ? (value as string[]) : [];
-  const customValue = arr.find((x) => !f.options.includes(x)) ?? '';
-  const [isOthersChecked, setIsOthersChecked] = useState(() => customValue !== '');
+  const initialCustom = arr.find((x) => !f.options.includes(x)) ?? '';
+  const [isOthersChecked, setIsOthersChecked] = useState(() => initialCustom !== '');
+  const [customText, setCustomText] = useState(initialCustom);
   const inputClass = 'border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 w-full min-h-11 text-sm dark:bg-slate-800 dark:text-slate-100';
 
   const handleOthersCheckboxChange = (checked: boolean) => {
     setIsOthersChecked(checked);
     if (!checked) {
+      setCustomText('');
       onChange(arr.filter((x) => f.options.includes(x)));
     } else {
-      if (!arr.includes('')) {
-        onChange([...arr, '']);
+      if (customText.trim() !== '' && !arr.includes(customText)) {
+        onChange([...arr, customText]);
       }
     }
   };
 
   const handleCustomTextChange = (text: string) => {
+    setCustomText(text);
     const cleaned = arr.filter((x) => f.options.includes(x));
     if (text.trim() !== '') {
-      onChange([...cleaned, text]);
+      // Avoid duplicating if the typed text happens to match an existing option that is already selected
+      if (!cleaned.includes(text)) {
+        onChange([...cleaned, text]);
+      } else {
+        onChange(cleaned);
+      }
     } else {
       onChange(cleaned);
     }
@@ -262,7 +270,7 @@ function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multi
           type="text"
           className={inputClass}
           placeholder="Type custom option..."
-          value={customValue}
+          value={customText}
           onChange={(e) => handleCustomTextChange(e.target.value)}
           autoFocus
         />
