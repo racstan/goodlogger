@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { TemplatePanel } from '@/components/TemplatePanel';
 import { ProjectLogsManager } from '@/components/ProjectLogsManager';
+import { ProjectHeader } from '@/components/ProjectHeader';
 import type { FieldDef, LogValue } from '@/lib/schema';
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -69,11 +70,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Link href="/" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 inline-block mb-1">&larr; Projects</Link>
-          <h1 className="text-xl sm:text-2xl font-semibold break-words">{project.name}</h1>
-          {project.description && <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">{project.description}</p>}
-        </div>
+        <ProjectHeader project={project} />
         {importedTemplates.length > 0 && (
           <div className="flex items-center gap-2 shrink-0">
             <a
