@@ -13,7 +13,42 @@ type Props = {
 
 export function MediaUploadField({ f, value, onChange }: Props) {
   const [showRecorder, setShowRecorder] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const valStr = typeof value === 'string' ? value : '';
+
+  const handleDirectUpload = async (file: File) => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) return alert('Cloudinary is not configured.');
+    
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', 'goodlogger_unsigned');
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+        method: 'POST',
+        body: fd,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      onChange(data.secure_url);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Failed to upload file');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleDirectUpload(file);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -76,10 +111,20 @@ export function MediaUploadField({ f, value, onChange }: Props) {
                   <button
                     type="button"
                     onClick={() => open()}
-                    className="w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm text-slate-600 dark:text-slate-400"
+                    onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                    onDragLeave={() => setDragActive(false)}
+                    onDrop={handleDrop}
+                    disabled={isUploading}
+                    className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm ${
+                      dragActive
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'
+                        : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
                   >
-                    <span className="mb-2">Click to upload {f.type}</span>
-                    <span className="text-xs opacity-75">Max 1 file</span>
+                    <span className="mb-2">
+                      {isUploading ? 'Uploading...' : `Click or Drag & Drop to upload ${f.type}`}
+                    </span>
+                    {!isUploading && <span className="text-xs opacity-75">Max 1 file</span>}
                   </button>
                 );
               }}
