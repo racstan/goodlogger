@@ -48,6 +48,11 @@ export function MediaUploadField({ f, value, onChange }: Props) {
     if (file) handleDirectUpload(file);
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const file = e.clipboardData.files?.[0];
+    if (file) handleDirectUpload(file);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleDirectUpload(file);
@@ -107,6 +112,7 @@ export function MediaUploadField({ f, value, onChange }: Props) {
               onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
               onDragLeave={() => setDragActive(false)}
               onDrop={handleDrop}
+              onPaste={handlePaste}
               disabled={isUploading}
               className={`w-full flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded transition-colors text-sm ${
                 dragActive
@@ -115,7 +121,7 @@ export function MediaUploadField({ f, value, onChange }: Props) {
               }`}
             >
               <span className="mb-2">
-                {isUploading ? 'Uploading...' : `Click or Drag & Drop to upload ${f.type}`}
+                {isUploading ? 'Uploading...' : `Click, Drag, or Paste to upload ${f.type}`}
               </span>
               {!isUploading && <span className="text-xs opacity-75">Max 1 file</span>}
             </button>
