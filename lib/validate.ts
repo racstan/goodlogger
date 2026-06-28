@@ -7,13 +7,16 @@ const valueSchemaFor = (def: FieldDef): z.ZodTypeAny => {
   switch (def.type) {
     case 'text':
     case 'richtext':
+    case 'image':
+    case 'audio':
+    case 'video':
       return def.required
         ? z.string().refine((s) => s.trim().length > 0, { message: 'cannot be empty' })
         : z.string().optional();
     case 'number':
       return def.required ? z.number() : z.number().optional();
     case 'boolean':
-      return z.boolean();
+      return def.required ? z.boolean() : z.boolean().optional();
     case 'date':
       return def.required
         ? z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')

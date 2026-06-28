@@ -6,6 +6,7 @@ import { createProjectLog, updateProjectLog } from '@/app/actions/logs';
 import { validateLogValues } from '@/lib/validate';
 import type { FieldDef, LogValues } from '@/lib/schema';
 import { getNextIncrementerValue } from '@/lib/incrementer';
+import { MediaUploadField } from '@/components/MediaUploadField';
 
 type TemplateGroup = {
   id: string;
@@ -396,5 +397,9 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
         );
       }
     }
+    case 'image':
+    case 'audio':
+    case 'video':
+      return <MediaUploadField f={f as any} value={value} onChange={onChange} />;
   }
 }

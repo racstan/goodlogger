@@ -29,6 +29,11 @@ function formatValue(def: FieldDef, v: LogValue | undefined): string {
     case 'phone':
     case 'color':
       return String(v);
+    case 'image':
+      return `=IMAGE("${v}")`;
+    case 'audio':
+    case 'video':
+      return String(v);
     case 'number':
     case 'slider':
     case 'rating':
@@ -50,19 +55,21 @@ function formatValue(def: FieldDef, v: LogValue | undefined): string {
 
 function csvCell(raw: string): string {
   let s = raw;
-  const injected = s.length > 0 && DANGEROUS.has(s[0]);
+  const isSafeFormula = s.startsWith('=IMAGE("') && s.endsWith('")');
+  const injected = s.length > 0 && DANGEROUS.has(s[0]) && !isSafeFormula;
   if (injected) s = "'" + s;
-  const needsQuoting = injected || /[",\n\r]/.test(s);
+  const needsQuoting = injected || /[",\n\r]/.test(s) || isSafeFormula;
   if (!needsQuoting) return s;
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
 export function buildCsv(fields: FieldDef[], logs: CsvLog[], timezone: string): string {
-  const header = [...fields.map((f) => f.name), `Timestamp (${timezone})`];
+  const header = ['S.No', ...fields.map((f) => f.name), `Timestamp (${timezone})`];
   const lines: string[] = [header.map(csvCell).join(',')];
 
+  let sno = 1;
   for (const log of logs) {
-    const cells: string[] = [];
+    const cells: string[] = [csvCell(String(sno++))];
     for (const f of fields) {
       if (!(f.id in log.values)) {
         cells.push(csvCell(MISSING));
@@ -95,11 +102,12 @@ export function buildProjectCsv(templates: ProjectTemplateInfo[], logs: CsvLog[]
     }
   }
 
-  const header = [...fieldOrder.map((e) => e.field.name), `Timestamp (${timezone})`];
+  const header = ['S.No', ...fieldOrder.map((e) => e.field.name), `Timestamp (${timezone})`];
   const lines: string[] = [header.map(csvCell).join(',')];
 
+  let sno = 1;
   for (const log of logs) {
-    const cells: string[] = [];
+    const cells: string[] = [csvCell(String(sno++))];
     for (const { field } of fieldOrder) {
       if (!(field.id in log.values)) {
         cells.push(csvCell(''));

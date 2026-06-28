@@ -15,12 +15,15 @@ export type FieldType =
   | 'color'
   | 'richtext'
   | 'rating'
-  | 'incrementer';
+  | 'incrementer'
+  | 'image'
+  | 'audio'
+  | 'video';
 
 type Base = { id: string; name: string; required: boolean };
 
 export type FieldDef =
-  | (Base & { type: 'text' | 'number' | 'date' | 'time' | 'email' | 'url' | 'phone' | 'color' | 'richtext' })
+  | (Base & { type: 'text' | 'number' | 'date' | 'time' | 'email' | 'url' | 'phone' | 'color' | 'richtext' | 'image' | 'audio' | 'video' })
   | (Base & { type: 'boolean' })
   | (Base & { type: 'select' | 'multiselect'; options: string[] })
   | (Base & { type: 'slider'; min: number; max: number; step: number })
@@ -46,7 +49,7 @@ export const fieldDefSchema = z.discriminatedUnion('type', [
     id: z.string().min(1),
     name: z.string().min(1),
     required: z.boolean(),
-    type: z.enum(['text', 'number', 'date', 'time', 'email', 'url', 'phone', 'color', 'richtext']),
+    type: z.enum(['text', 'number', 'date', 'time', 'email', 'url', 'phone', 'color', 'richtext', 'image', 'audio', 'video']),
   }),
   z.object({
     id: z.string().min(1),

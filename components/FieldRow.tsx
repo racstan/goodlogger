@@ -17,6 +17,9 @@ const TYPES: { value: FieldType; label: string }[] = [
   { value: 'richtext', label: 'Rich Text' },
   { value: 'rating', label: 'Rating (stars)' },
   { value: 'incrementer', label: 'Incrementer' },
+  { value: 'image', label: 'Image' },
+  { value: 'audio', label: 'Audio' },
+  { value: 'video', label: 'Video' },
 ];
 
 type Props = {
@@ -213,6 +216,9 @@ export function makeField(type: FieldType, name = '', required = false): FieldDe
     case 'phone':
     case 'color':
     case 'richtext':
+    case 'image':
+    case 'audio':
+    case 'video':
       return { id, name, type, required };
     case 'boolean':
       return { id, name, type: 'boolean', required };

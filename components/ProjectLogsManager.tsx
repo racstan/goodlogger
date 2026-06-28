@@ -26,8 +26,23 @@ type Props = {
   allFields: FieldDef[];
 };
 
-function formatCell(v: LogValue | undefined): string {
+function formatCell(v: LogValue | undefined, f?: FieldDef): React.ReactNode {
   if (v === undefined || v === null || v === '') return '—';
+  if (f) {
+    if (f.type === 'image' && typeof v === 'string') {
+      return (
+        <a href={v} target="_blank" rel="noreferrer" className="block w-16 h-16">
+          <img src={v} alt="Uploaded" className="object-cover w-full h-full rounded border border-slate-200 dark:border-slate-700" />
+        </a>
+      );
+    }
+    if (f.type === 'audio' && typeof v === 'string') {
+      return <audio src={v} controls className="w-48 h-8" />;
+    }
+    if (f.type === 'video' && typeof v === 'string') {
+      return <a href={v} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline">View Video</a>;
+    }
+  }
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'boolean') return v ? 'Yes' : 'No';
   if (typeof v === 'object' && v !== null && 'value' in v && !Array.isArray(v)) {
@@ -95,7 +110,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                     return (
                       <div key={f.id} className="flex items-baseline gap-2 text-sm">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0 w-28 truncate">{f.name}:</span>
-                        <span className="font-medium break-words min-w-0">{formatCell(v)}</span>
+                        <span className="font-medium break-words min-w-0">{formatCell(v, f)}</span>
                       </div>
                     );
                   })}
@@ -123,7 +138,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                         const v = log.values[f.id];
                         return (
                           <td key={f.id} className="px-4 py-2 whitespace-nowrap max-w-[200px] truncate">
-                            {formatCell(v)}
+                            {formatCell(v, f)}
                           </td>
                         );
                       })}
