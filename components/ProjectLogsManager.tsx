@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { DeleteButton } from '@/components/DeleteButton';
 import { ProjectLogForm } from '@/components/ProjectLogForm';
 import type { FieldDef, LogValue, LogValues } from '@/lib/schema';
@@ -26,14 +26,18 @@ type Props = {
   allFields: FieldDef[];
 };
 
-function formatCell(v: LogValue | undefined, f?: FieldDef): React.ReactNode {
+function formatCell(v: LogValue | undefined, f?: FieldDef, onImageClick?: () => void): React.ReactNode {
   if (v === undefined || v === null || v === '') return '—';
   if (f) {
     if (f.type === 'image' && typeof v === 'string') {
       return (
-        <a href={v} target="_blank" rel="noreferrer" className="block w-16 h-16">
-          <img src={v} alt="Uploaded" className="object-cover w-full h-full rounded border border-slate-200 dark:border-slate-700" />
-        </a>
+        <button 
+          type="button"
+          onClick={onImageClick ? onImageClick : () => window.open(v, '_blank')}
+          className="block w-16 h-16 cursor-zoom-in"
+        >
+          <img src={v} alt="Uploaded" className="object-cover w-full h-full rounded border border-slate-200 dark:border-slate-700 transition-opacity hover:opacity-80" />
+        </button>
       );
     }
     if (f.type === 'audio' && typeof v === 'string') {
@@ -61,6 +65,41 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
       formElement.scrollIntoView({ behavior: 'smooth' });
     }
     setEditingLog(log);
+  };
+
+  const images = useMemo(() => {
+    const imgs: { url: string, logId: string, fieldId: string, serial: number, fieldName: string }[] = [];
+    parsedLogs.forEach(log => {
+      allFields.forEach(f => {
+        const v = log.values[f.id];
+        if (f.type === 'image' && typeof v === 'string') {
+          imgs.push({ url: v, logId: log.id, fieldId: f.id, serial: log.serial, fieldName: f.name });
+        }
+      });
+    });
+    return imgs;
+  }, [parsedLogs, allFields]);
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'ArrowRight') setLightboxIndex(i => (i + 1) % images.length);
+      if (e.key === 'ArrowLeft') setLightboxIndex(i => (i - 1 + images.length) % images.length);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, images.length]);
+
+  const handleImageClick = (logId: string, fieldId: string) => {
+    const idx = images.findIndex(img => img.logId === logId && img.fieldId === fieldId);
+    if (idx !== -1) {
+      setLightboxIndex(idx);
+      setLightboxOpen(true);
+    }
   };
 
   const cancelEdit = () => {
@@ -110,7 +149,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                     return (
                       <div key={f.id} className="flex items-baseline gap-2 text-sm">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0 w-28 truncate">{f.name}:</span>
-                        <span className="font-medium break-words min-w-0">{formatCell(v, f)}</span>
+                        <span className="font-medium break-words min-w-0">{formatCell(v, f, () => handleImageClick(log.id, f.id))}</span>
                       </div>
                     );
                   })}
@@ -138,7 +177,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                         const v = log.values[f.id];
                         return (
                           <td key={f.id} className="px-4 py-2 whitespace-nowrap max-w-[200px] truncate">
-                            {formatCell(v, f)}
+                            {formatCell(v, f, () => handleImageClick(log.id, f.id))}
                           </td>
                         );
                       })}
@@ -180,6 +219,60 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
           parsedLogs={parsedLogs}
         />
       </div>
+
+      {/* Lightbox Overlay */}
+      {lightboxOpen && images.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm">
+          <button 
+            type="button"
+            className="absolute top-4 right-4 text-white/70 hover:text-white p-2"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <div className="absolute top-4 left-4 text-white/70 text-sm">
+            #{images[lightboxIndex].serial} · {images[lightboxIndex].fieldName}
+            <br />
+            {lightboxIndex + 1} / {images.length}
+          </div>
+
+          <button 
+            type="button"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-4 disabled:opacity-30"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex(i => (i - 1 + images.length) % images.length);
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <img 
+            src={images[lightboxIndex].url} 
+            alt="Enlarged log image" 
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          <button 
+            type="button"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-4 disabled:opacity-30"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex(i => (i + 1) % images.length);
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
