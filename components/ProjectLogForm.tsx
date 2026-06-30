@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProjectLog, updateProjectLog } from '@/app/actions/logs';
 import { validateLogValues } from '@/lib/validate';
@@ -65,6 +65,7 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [dateSteps, setDateSteps] = useState<Record<string, number>>({});
+  const formRef = useRef<HTMLDivElement>(null);
 
   const set = (id: string, v: unknown) => setValues((p: LogValues) => ({ ...p, [id]: v as never }));
 
@@ -116,6 +117,7 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
         setSuccess(true);
       }
       router.refresh();
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) throw err;
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -125,7 +127,7 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
   };
 
   return (
-    <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+    <div ref={formRef} className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
       <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
         <h2 className="font-medium dark:text-slate-100">
           {editingLog ? `Edit Entry #${editingLog.serial}` : 'Log Entry'}
