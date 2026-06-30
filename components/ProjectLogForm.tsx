@@ -42,6 +42,20 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
             }
           }
           initial[f.id] = getNextIncrementerValue(f, lastVal);
+        } else if (f.type === 'date') {
+          let lastVal: any = undefined;
+          if (parsedLogs && parsedLogs.length > 0) {
+            for (let i = parsedLogs.length - 1; i >= 0; i--) {
+              const log = parsedLogs[i];
+              if (log.values && log.values[f.id] !== undefined && log.values[f.id] !== null) {
+                lastVal = log.values[f.id];
+                break;
+              }
+            }
+          }
+          if (lastVal) {
+            initial[f.id] = lastVal;
+          }
         }
       }
     }
@@ -50,6 +64,7 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [dateSteps, setDateSteps] = useState<Record<string, number>>({});
 
   const set = (id: string, v: unknown) => setValues((p: LogValues) => ({ ...p, [id]: v as never }));
 
@@ -82,6 +97,18 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
             if (f.type === 'incrementer') {
               const currentVal = values[f.id];
               nextValues[f.id] = getNextIncrementerValue(f, currentVal);
+            } else if (f.type === 'date') {
+              const currentVal = values[f.id] as string;
+              if (currentVal) {
+                const step = dateSteps[f.id] || 0;
+                const d = new Date(currentVal);
+                if (!isNaN(d.getTime())) {
+                  d.setUTCDate(d.getUTCDate() + step);
+                  nextValues[f.id] = d.toISOString().split('T')[0];
+                } else {
+                  nextValues[f.id] = currentVal;
+                }
+              }
             }
           }
         }
@@ -120,7 +147,7 @@ export function ProjectLogForm({ projectId, templates, nextSerial, editingLog, o
                   <label className="block text-sm font-medium mb-1">
                     {f.name}{f.required && <span className="text-red-600"> *</span>}
                   </label>
-                  {renderInput(f, values[f.id], (v) => set(f.id, v))}
+                  {renderInput(f, values[f.id], (v) => set(f.id, v), dateSteps, setDateSteps)}
                 </div>
               ))}
             </div>
@@ -279,7 +306,13 @@ function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multi
   );
 }
 
-function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void): React.ReactElement {
+function renderInput(
+  f: FieldDef,
+  value: unknown,
+  onChange: (v: unknown) => void,
+  dateSteps?: Record<string, number>,
+  setDateSteps?: React.Dispatch<React.SetStateAction<Record<string, number>>>
+): React.ReactElement {
   const inputClass = 'border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 w-full min-h-11 text-sm dark:bg-slate-800 dark:text-slate-100';
   switch (f.type) {
     case 'text':
@@ -313,8 +346,30 @@ function renderInput(f: FieldDef, value: unknown, onChange: (v: unknown) => void
           </label>
         </div>
       );
-    case 'date':
-      return <input type="date" className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />;
+    case 'date': {
+      const stepVal = dateSteps?.[f.id] ?? 0;
+      return (
+        <div className="space-y-2">
+          <input type="date" className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              Auto-increment next entry by (days):
+            </label>
+            <input
+              type="number"
+              className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-20 text-sm dark:bg-slate-800 dark:text-slate-100"
+              value={stepVal}
+              onChange={(e) => {
+                const s = parseInt(e.target.value, 10);
+                if (setDateSteps) {
+                  setDateSteps(prev => ({ ...prev, [f.id]: isNaN(s) ? 0 : s }));
+                }
+              }}
+            />
+          </div>
+        </div>
+      );
+    }
     case 'time':
       return <input type="time" className={inputClass} value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />;
     case 'email':
