@@ -25,6 +25,7 @@ type Props = {
   parsedLogs: LogEntry[];
   nextSerial: number;
   allFields: FieldDef[];
+  fullScreenMode?: boolean;
 };
 
 function formatCell(v: LogValue | undefined, f?: FieldDef, onImageClick?: () => void): React.ReactNode {
@@ -56,7 +57,7 @@ function formatCell(v: LogValue | undefined, f?: FieldDef, onImageClick?: () => 
   return String(v);
 }
 
-export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSerial, allFields }: Props) {
+export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSerial, allFields, fullScreenMode }: Props) {
   const [editingLog, setEditingLog] = useState<LogEntry | null>(null);
 
   const startEdit = (log: LogEntry) => {
@@ -112,22 +113,36 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
       {/* Unified scrollable log table */}
       <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
-          <h2 className="font-medium text-sm dark:text-slate-100">
-            Entries
+          <div className="flex items-center gap-2">
+            <h2 className="font-medium text-sm dark:text-slate-100">
+              Entries
+              {parsedLogs.length > 0 && (
+                <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({parsedLogs.length})</span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
             {parsedLogs.length > 0 && (
-              <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({parsedLogs.length})</span>
+              <div className="md:hidden text-xs text-slate-400 dark:text-slate-500">
+                {parsedLogs.length} log{parsedLogs.length === 1 ? '' : 's'}
+              </div>
             )}
-          </h2>
-          {parsedLogs.length > 0 && (
-            <div className="md:hidden text-xs text-slate-400 dark:text-slate-500">
-              {parsedLogs.length} log{parsedLogs.length === 1 ? '' : 's'}
-            </div>
-          )}
+            {!fullScreenMode && (
+              <Link
+                href={`/projects/${projectId}/logs`}
+                className="text-xs flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                title="View All Entries in Fullscreen"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
+                Expand All
+              </Link>
+            )}
+          </div>
         </div>
         {parsedLogs.length > 0 ? (
           <>
             {/* ─── Mobile card view (< md) ─── */}
-            <div className="md:hidden p-3 space-y-3 max-h-[400px] overflow-y-auto">
+            <div className={`md:hidden p-3 space-y-3 ${fullScreenMode ? '' : 'max-h-[400px] overflow-y-auto'}`}>
               {[...parsedLogs].reverse().map((log) => (
                 <div key={log.id} className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
@@ -164,7 +179,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
               ))}
             </div>
             {/* ─── Desktop table view (md+) ─── */}
-            <div className="hidden md:block overflow-auto" style={{ height: '400px' }}>
+            <div className="hidden md:block overflow-auto" style={fullScreenMode ? undefined : { height: '400px' }}>
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-white dark:bg-slate-800">
                   <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-slate-500 dark:text-slate-400">
@@ -226,17 +241,19 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
       </div>
 
       {/* Combined log form — shows all fields from all templates */}
-      <div id="log-form-container">
-        <ProjectLogForm
-          key={editingLog?.id ?? 'new'}
-          projectId={projectId}
-          templates={templates}
-          nextSerial={nextSerial}
-          editingLog={editingLog ? { id: editingLog.id, serial: editingLog.serial, values: editingLog.values } : null}
-          onCancelEdit={cancelEdit}
-          parsedLogs={parsedLogs}
-        />
-      </div>
+      {!fullScreenMode && (
+        <div id="log-form-container">
+          <ProjectLogForm
+            key={editingLog?.id ?? 'new'}
+            projectId={projectId}
+            templates={templates}
+            nextSerial={nextSerial}
+            editingLog={editingLog ? { id: editingLog.id, serial: editingLog.serial, values: editingLog.values } : null}
+            onCancelEdit={cancelEdit}
+            parsedLogs={parsedLogs}
+          />
+        </div>
+      )}
 
       {/* Lightbox Overlay */}
       {lightboxOpen && images.length > 0 && (
