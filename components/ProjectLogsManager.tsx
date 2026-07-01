@@ -57,6 +57,21 @@ function formatCell(v: LogValue | undefined, f?: FieldDef, onImageClick?: () => 
   return String(v);
 }
 
+function getPlainCellText(v: LogValue | undefined, f?: FieldDef): string | undefined {
+  if (v === undefined || v === null || v === '') return undefined;
+  if (f) {
+    if (f.type === 'image' || f.type === 'audio' || f.type === 'video') {
+      return undefined;
+    }
+  }
+  if (Array.isArray(v)) return v.join(', ');
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'object' && v !== null && 'value' in v && !Array.isArray(v)) {
+    return String(v.value);
+  }
+  return String(v);
+}
+
 export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSerial, allFields, fullScreenMode }: Props) {
   const [editingLog, setEditingLog] = useState<LogEntry | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -243,7 +258,7 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                       {allFields.map((f) => {
                         const v = log.values[f.id];
                         return (
-                          <td key={f.id} className="px-4 py-2 whitespace-nowrap max-w-[200px] truncate">
+                          <td key={f.id} className="px-4 py-2 whitespace-nowrap max-w-[200px] truncate" title={getPlainCellText(v, f)}>
                             {formatCell(v, f, () => handleImageClick(log.id, f.id))}
                           </td>
                         );
