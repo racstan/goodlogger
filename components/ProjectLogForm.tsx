@@ -234,10 +234,21 @@ function SelectInput({ f, value, onChange }: { f: FieldDef & { type: 'select' };
 
 function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multiselect' }; value: unknown; onChange: (v: unknown) => void }) {
   const arr = Array.isArray(value) ? (value as string[]) : [];
-  const initialCustom = arr.find((x) => !f.options.includes(x)) ?? '';
-  const [isOthersChecked, setIsOthersChecked] = useState(() => initialCustom !== '');
+  const customValues = arr.filter((x) => !f.options.includes(x));
+  const initialCustom = customValues.join(', ');
+  const [isOthersChecked, setIsOthersChecked] = useState(() => customValues.length > 0);
   const [customText, setCustomText] = useState(initialCustom);
   const inputClass = 'border border-slate-300 dark:border-slate-600 rounded px-3 py-2.5 w-full min-h-11 text-sm dark:bg-slate-800 dark:text-slate-100';
+
+  const handleCustomTextChange = (text: string) => {
+    setCustomText(text);
+    const cleaned = arr.filter((x) => f.options.includes(x));
+    const parsedCustom = text.split(',').map(s => s.trim()).filter(Boolean);
+    const finalCustom = parsedCustom.filter(x => !f.options.includes(x));
+    // Unique values
+    const uniqueCustom = Array.from(new Set(finalCustom));
+    onChange([...cleaned, ...uniqueCustom]);
+  };
 
   const handleOthersCheckboxChange = (checked: boolean) => {
     setIsOthersChecked(checked);
@@ -245,24 +256,7 @@ function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multi
       setCustomText('');
       onChange(arr.filter((x) => f.options.includes(x)));
     } else {
-      if (customText.trim() !== '' && !arr.includes(customText)) {
-        onChange([...arr, customText]);
-      }
-    }
-  };
-
-  const handleCustomTextChange = (text: string) => {
-    setCustomText(text);
-    const cleaned = arr.filter((x) => f.options.includes(x));
-    if (text.trim() !== '') {
-      // Avoid duplicating if the typed text happens to match an existing option that is already selected
-      if (!cleaned.includes(text)) {
-        onChange([...cleaned, text]);
-      } else {
-        onChange(cleaned);
-      }
-    } else {
-      onChange(cleaned);
+      handleCustomTextChange(customText);
     }
   };
 
@@ -270,10 +264,10 @@ function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multi
     <div className="space-y-3 w-full">
       <div className="flex flex-wrap gap-3">
         {f.options.map((o: string) => (
-          <label key={o} className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11">
+          <label key={o} className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11 cursor-pointer">
             <input
               type="checkbox"
-              className="min-h-5 min-w-5"
+              className="min-h-5 min-w-5 cursor-pointer text-emerald-600 focus:ring-emerald-500 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
               checked={arr.includes(o)}
               onChange={(e) => {
                 if (e.target.checked) onChange([...arr, o]);
@@ -283,10 +277,10 @@ function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multi
             {o}
           </label>
         ))}
-        <label className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11">
+        <label className="inline-flex items-center gap-2 text-sm py-1.5 min-h-11 cursor-pointer">
           <input
             type="checkbox"
-            className="min-h-5 min-w-5"
+            className="min-h-5 min-w-5 cursor-pointer text-emerald-600 focus:ring-emerald-500 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
             checked={isOthersChecked}
             onChange={(e) => handleOthersCheckboxChange(e.target.checked)}
           />
@@ -295,14 +289,25 @@ function MultiSelectInput({ f, value, onChange }: { f: FieldDef & { type: 'multi
       </div>
 
       {isOthersChecked && (
-        <input
-          type="text"
-          className={inputClass}
-          placeholder="Type custom option..."
-          value={customText}
-          onChange={(e) => handleCustomTextChange(e.target.value)}
-          autoFocus
-        />
+        <div className="space-y-2">
+          <input
+            type="text"
+            className={inputClass}
+            placeholder="Type custom options (comma separated)..."
+            value={customText}
+            onChange={(e) => handleCustomTextChange(e.target.value)}
+            autoFocus
+          />
+          {customValues.length > 0 && (
+             <div className="flex flex-wrap gap-2">
+               {customValues.map((val, idx) => (
+                 <span key={idx} className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+                   {val}
+                 </span>
+               ))}
+             </div>
+          )}
+        </div>
       )}
     </div>
   );

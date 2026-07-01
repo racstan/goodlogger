@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { DeleteButton } from '@/components/DeleteButton';
 import { ProjectLogForm } from '@/components/ProjectLogForm';
 import type { FieldDef, LogValue, LogValues } from '@/lib/schema';
@@ -134,6 +135,12 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                       #{log.serial} · {new Date(log.loggedAt).toLocaleString()}
                     </span>
                     <div className="flex items-center gap-2">
+                      <Link
+                        href={`/projects/${projectId}/logs/${log.id}`}
+                        className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 min-h-9 flex items-center justify-center"
+                      >
+                        Expand
+                      </Link>
                       <button
                         type="button"
                         onClick={() => startEdit(log)}
@@ -185,6 +192,12 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                         {new Date(log.loggedAt).toLocaleString()}
                       </td>
                       <td className="px-4 py-2 flex items-center justify-end gap-2 pr-4">
+                        <Link
+                          href={`/projects/${projectId}/logs/${log.id}`}
+                          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 min-h-11 sm:min-h-0 flex items-center justify-center"
+                        >
+                          Expand
+                        </Link>
                         <button
                           type="button"
                           onClick={() => startEdit(log)}
