@@ -179,7 +179,18 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                 <tbody>
                   {parsedLogs.map((log) => (
                     <tr key={log.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700">
-                      <td className="px-4 py-2 text-slate-400 dark:text-slate-500 whitespace-nowrap">{log.serial}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-400 dark:text-slate-500 w-4">{log.serial}</span>
+                          <Link
+                            href={`/projects/${projectId}/logs/${log.id}`}
+                            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center transition-colors"
+                            title="Expand to Fullscreen"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
+                          </Link>
+                        </div>
+                      </td>
                       {allFields.map((f) => {
                         const v = log.values[f.id];
                         return (
@@ -192,12 +203,6 @@ export function ProjectLogsManager({ projectId, templates, parsedLogs, nextSeria
                         {new Date(log.loggedAt).toLocaleString()}
                       </td>
                       <td className="px-4 py-2 flex items-center justify-end gap-2 pr-4">
-                        <Link
-                          href={`/projects/${projectId}/logs/${log.id}`}
-                          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 min-h-11 sm:min-h-0 flex items-center justify-center"
-                        >
-                          Expand
-                        </Link>
                         <button
                           type="button"
                           onClick={() => startEdit(log)}
