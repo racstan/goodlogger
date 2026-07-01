@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import type { FieldDef, LogValue } from '@/lib/schema';
-import { ArrowLeft } from 'lucide-react';
 
 export default async function LogEntryDetailPage({
   params,
@@ -51,8 +50,7 @@ export default async function LogEntryDetailPage({
             href={`/projects/${id}`}
             className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-2 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Project
+            &larr; Back to Project
           </Link>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
             Log Entry Details
