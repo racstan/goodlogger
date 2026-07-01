@@ -25,11 +25,14 @@ const TYPES: { value: FieldType; label: string }[] = [
 type Props = {
   field: FieldDef;
   index: number;
+  totalFields?: number;
   onChange: (f: FieldDef) => void;
   onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 };
 
-export function FieldRow({ field, index, onChange, onRemove }: Props) {
+export function FieldRow({ field, index, totalFields = 1, onChange, onRemove, onMoveUp, onMoveDown }: Props) {
   const update = (patch: Partial<FieldDef>) => onChange({ ...field, ...patch } as FieldDef);
 
   return (
@@ -68,6 +71,28 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
             />
             Required
           </label>
+          {onMoveUp && (
+            <button
+              type="button"
+              aria-label="Move field up"
+              disabled={index === 0}
+              onClick={onMoveUp}
+              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 min-h-11 sm:min-h-0 flex items-center justify-center"
+            >
+              ↑
+            </button>
+          )}
+          {onMoveDown && (
+            <button
+              type="button"
+              aria-label="Move field down"
+              disabled={index === totalFields - 1}
+              onClick={onMoveDown}
+              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 min-h-11 sm:min-h-0 flex items-center justify-center"
+            >
+              ↓
+            </button>
+          )}
           <button
             type="button"
             aria-label="Remove field"
@@ -96,6 +121,32 @@ export function FieldRow({ field, index, onChange, onRemove }: Props) {
                   update({ options: updated } as Partial<FieldDef>);
                 }}
               />
+              <button
+                type="button"
+                aria-label={`Move option ${i + 1} up`}
+                disabled={i === 0}
+                onClick={() => {
+                  const updated = [...field.options];
+                  [updated[i - 1], updated[i]] = [updated[i], updated[i - 1]];
+                  update({ options: updated } as Partial<FieldDef>);
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30 text-lg px-1 min-h-11 flex items-center justify-center shrink-0"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label={`Move option ${i + 1} down`}
+                disabled={i === field.options.length - 1}
+                onClick={() => {
+                  const updated = [...field.options];
+                  [updated[i], updated[i + 1]] = [updated[i + 1], updated[i]];
+                  update({ options: updated } as Partial<FieldDef>);
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30 text-lg px-1 min-h-11 flex items-center justify-center shrink-0"
+              >
+                ↓
+              </button>
               <button
                 type="button"
                 aria-label={`Remove option ${i + 1}`}

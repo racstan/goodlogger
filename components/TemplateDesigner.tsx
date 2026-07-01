@@ -30,6 +30,24 @@ export function TemplateDesigner({ templateId, initialName = '', initialDescript
 
   const removeField = (i: number) => setFields((arr) => arr.filter((_, idx) => idx !== i));
 
+  const moveFieldUp = (i: number) => {
+    if (i === 0) return;
+    setFields((arr) => {
+      const copy = [...arr];
+      [copy[i - 1], copy[i]] = [copy[i], copy[i - 1]];
+      return copy;
+    });
+  };
+
+  const moveFieldDown = (i: number) => {
+    if (i === fields.length - 1) return;
+    setFields((arr) => {
+      const copy = [...arr];
+      [copy[i], copy[i + 1]] = [copy[i + 1], copy[i]];
+      return copy;
+    });
+  };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -92,9 +110,12 @@ export function TemplateDesigner({ templateId, initialName = '', initialDescript
           <FieldRow
             key={f.id}
             index={i}
+            totalFields={fields.length}
             field={f}
             onChange={(d) => updateField(i, d)}
             onRemove={() => removeField(i)}
+            onMoveUp={() => moveFieldUp(i)}
+            onMoveDown={() => moveFieldDown(i)}
           />
         ))}
       </div>
